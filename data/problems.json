@@ -1,0 +1,70 @@
+{
+  "problems": [
+    {
+      "id": 1,
+      "category": "Rumbo y demoras",
+      "text": "Navegas desde el faro de Tarifa con rumbo 120° durante 12 millas. ¿Qué demora verdadera tendrías sobre Punta Europa tras ese tramo?",
+      "answers": [
+        {"text": "Aproximadamente 045°", "valid": false},
+        {"text": "Aproximadamente 060°", "valid": true},
+        {"text": "Aproximadamente 090°", "valid": false},
+        {"text": "Aproximadamente 115°", "valid": false}
+      ]
+    },
+    {
+      "id": 2,
+      "category": "Corrientes",
+      "text": "Con una corriente estable de 2 nudos hacia el 270°, estableces un rumbo 180° y velocidad de 8 nudos. ¿Cuál es tu rumbo efectivo sobre la carta?",
+      "answers": [
+        {"text": "Unos 194°", "valid": true},
+        {"text": "Unos 180°", "valid": false},
+        {"text": "Unos 165°", "valid": false},
+        {"text": "Unos 210°", "valid": false}
+      ]
+    },
+    {
+      "id": 3,
+      "category": "Distancias",
+      "text": "Necesitas fondear a 0,3 millas al norte del Muelle de La Línea. ¿Qué distancia deberás trasladar con el compás desde el muelle para marcar la posición?",
+      "answers": [
+        {"text": "0,3 millas", "valid": true},
+        {"text": "0,5 millas", "valid": false},
+        {"text": "1,0 milla", "valid": false},
+        {"text": "0,8 millas", "valid": false}
+      ]
+    },
+    {
+      "id": 4,
+      "category": "Derrota",
+      "text": "Saliendo de Ceuta quieres arribar al puerto de Barbate. ¿Cuál es el rumbo auténtico inicial que debes establecer desde la bocana de Ceuta?",
+      "answers": [
+        {"text": "Aproximadamente 285°", "valid": false},
+        {"text": "Aproximadamente 295°", "valid": true},
+        {"text": "Aproximadamente 305°", "valid": false},
+        {"text": "Aproximadamente 270°", "valid": false}
+      ]
+    },
+    {
+      "id": 5,
+      "category": "Anclaje",
+      "text": "El plan es fondear con 50 metros de cadena a 12 metros de sonda. ¿Qué relación de cadena/sonda estás aplicando?",
+      "answers": [
+        {"text": "3:1", "valid": false},
+        {"text": "4:1", "valid": false},
+        {"text": "5:1", "valid": true},
+        {"text": "6:1", "valid": false}
+      ]
+    },
+    {
+      "id": 6,
+      "category": "Balizamiento",
+      "text": "Observas una marca cardinal Este formada por dos conos negros con vértices opuestos. ¿En qué zona debes navegar para evitar el peligro?",
+      "answers": [
+        {"text": "Al Este de la marca", "valid": true},
+        {"text": "Al Oeste de la marca", "valid": false},
+        {"text": "Al Norte de la marca", "valid": false},
+        {"text": "Al Sur de la marca", "valid": false}
+      ]
+    }
+  ]
+}

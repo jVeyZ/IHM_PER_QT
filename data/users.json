@@ -1,0 +1,13 @@
+{
+  "users": [
+    {
+      "nickname": "test",
+      "email": "test@example.com",
+      "passwordHash": "6cf6d590e71d57fe772025f4bfe8a09724180a1cc79897efff59c97b5905260e",
+      "salt": "2699eadf3c399981",
+      "birthdate": "2000-01-01",
+      "avatarPath": ":/resources/images/default_avatar.svg",
+      "sessions": []
+    }
+  ]
+}

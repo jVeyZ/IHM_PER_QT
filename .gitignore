@@ -1,0 +1,13 @@
+build/
+.vscode/
+.venv/
+CMakeLists.txt.user
+*.user
+.DS_Store
+*.autosave
+*.o
+*.moc
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+.qt/
