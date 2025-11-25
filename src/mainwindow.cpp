@@ -309,7 +309,6 @@ void MainWindow::toggleProblemPanel(bool collapsed) {
         problemBody_->setVisible(!collapsed);
     }
     if (collapseProblemButton_) {
-        collapseProblemButton_->setArrowType(collapsed ? Qt::RightArrow : Qt::DownArrow);
         collapseProblemButton_->setToolTip(collapsed ? tr("Mostrar panel") : tr("Ocultar panel"));
     }
     if (!contentSplitter_ || contentSplitter_->count() < 2) {
@@ -1554,7 +1553,8 @@ QWidget *MainWindow::createAppPage() {
     collapseProblemButton_->setObjectName("ProblemCollapseButton");
     collapseProblemButton_->setCheckable(true);
     collapseProblemButton_->setChecked(false);
-    collapseProblemButton_->setArrowType(Qt::DownArrow);
+    collapseProblemButton_->setIcon(QIcon(":/resources/images/icon_cross.svg"));
+    collapseProblemButton_->setIconSize(QSize(26, 26));
     collapseProblemButton_->setToolTip(tr("Ocultar panel"));
 
     problemHeader->addWidget(problemTitle);

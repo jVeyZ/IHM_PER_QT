@@ -69,6 +69,15 @@ QToolButton#StatsButton:checked {
     color: #f0f6fc;
 }
 
+QToolButton#ProblemCollapseButton {
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QToolButton#ProblemCollapseButton:hover {
+    background-color: #1f6feb1f;
+}
+
 QMenu {
     background-color: #161b22;
     border: 1px solid #30363d;

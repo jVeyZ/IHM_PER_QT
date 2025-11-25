@@ -77,6 +77,7 @@ qt_add_resources(ProyectoPER app_resources
         resources/images/icon_zoom_in.svg
         resources/images/icon_zoom_out.svg
         resources/images/icon_zoom_reset.svg
+        resources/images/icon_cross.svg
             resources/images/icon_logout.svg
             resources/images/icon_profile.svg
             resources/images/icon_results.svg
