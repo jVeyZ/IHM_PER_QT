@@ -814,7 +814,7 @@ void MainWindow::submitAnswer() {
 }
 
 void MainWindow::showProfileDialog() {
-    if (!currentUser_) {
+    if (!currentUser_ || guestSessionActive_) {
         return;
     }
     ProfileDialog dialog(userManager_, *currentUser_, this);
@@ -825,7 +825,7 @@ void MainWindow::showProfileDialog() {
 }
 
 void MainWindow::showResultsDialog() {
-    if (!currentUser_) {
+    if (!currentUser_ || guestSessionActive_) {
         return;
     }
     ResultsDialog dialog(currentUser_->sessions, this);
@@ -935,6 +935,27 @@ void MainWindow::attemptLogin() {
     loginFeedbackLabel_->clear();
     loginFeedbackLabel_->setVisible(false);
     enterApplication(*authenticated);
+}
+
+void MainWindow::startGuestSession() {
+    UserRecord guest;
+    guest.nickname = tr("Invitado");
+    guest.email = tr("Sesión temporal");
+    guest.avatarPath = QString::fromLatin1(kDefaultAvatarPath);
+
+    if (loginFeedbackLabel_) {
+        loginFeedbackLabel_->clear();
+        loginFeedbackLabel_->setVisible(false);
+        loginFeedbackLabel_->setStyleSheet(QString());
+    }
+    if (loginUserEdit_) {
+        loginUserEdit_->clear();
+    }
+    if (loginPasswordEdit_) {
+        loginPasswordEdit_->clear();
+    }
+
+    enterApplication(guest, true);
 }
 
 void MainWindow::validateLoginForm() {
@@ -1073,6 +1094,26 @@ QWidget *MainWindow::buildLoginFormPage(QWidget *parent) {
     loginButton_->setObjectName("LoginButton");
     loginButton_->setEnabled(false);
 
+    guestLoginButton_ = new QPushButton(tr("Acceso de Invitado"), page);
+    guestLoginButton_->setObjectName("GuestLoginButton");
+    guestLoginButton_->setCursor(Qt::PointingHandCursor);
+    guestLoginButton_->setStyleSheet(QStringLiteral(
+        "QPushButton {"
+        "background-color: #ffffff;"
+        "color: #0b3d70;"
+        "border: 1px solid #0b3d70;"
+        "border-radius: 8px;"
+        "padding: 8px 14px;"
+        "font-weight: 600;"
+        "}"
+        "QPushButton:hover {"
+        "background-color: #f2f6ff;"
+        "}"
+        "QPushButton:pressed {"
+        "background-color: #e3ecff;"
+        "}"
+    ));
+
     auto *registerRow = new QHBoxLayout();
     registerRow->setContentsMargins(0, 0, 0, 0);
     registerRow->setSpacing(8);
@@ -1092,12 +1133,14 @@ QWidget *MainWindow::buildLoginFormPage(QWidget *parent) {
     layout->addWidget(loginPasswordEdit_);
     layout->addWidget(loginFeedbackLabel_);
     layout->addWidget(loginButton_);
+    layout->addWidget(guestLoginButton_);
     layout->addLayout(registerRow);
 
     connect(loginUserEdit_, &QLineEdit::textChanged, this, &MainWindow::validateLoginForm);
     connect(loginPasswordEdit_, &QLineEdit::textChanged, this, &MainWindow::validateLoginForm);
     connect(loginPasswordEdit_, &QLineEdit::returnPressed, this, &MainWindow::attemptLogin);
     connect(loginButton_, &QPushButton::clicked, this, &MainWindow::attemptLogin);
+    connect(guestLoginButton_, &QPushButton::clicked, this, &MainWindow::startGuestSession);
     connect(registerButton, &QPushButton::clicked, this, &MainWindow::showRegistrationForm);
 
     return page;
@@ -1914,10 +1957,11 @@ void MainWindow::populateProblems() {
     updateProblemNavigationState();
 }
 
-void MainWindow::enterApplication(const UserRecord &user) {
+void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
     currentUser_ = user;
     currentSession_ = {};
     currentSession_.timestamp = QDateTime::currentDateTime();
+    guestSessionActive_ = guestMode;
 
     populateProblems();
     if (problemCombo_ && problemCombo_->count() > 0) {
@@ -1946,6 +1990,13 @@ void MainWindow::enterApplication(const UserRecord &user) {
     showStatusBanner(tr("Bienvenido/a, %1").arg(user.nickname), 4000);
 
     setQuestionPanelMode(QuestionPanelMode::Practice);
+
+    if (profileAction_) {
+        profileAction_->setEnabled(!guestSessionActive_);
+    }
+    if (resultsAction_) {
+        resultsAction_->setEnabled(!guestSessionActive_);
+    }
 }
 
 void MainWindow::returnToLogin() {
@@ -1967,11 +2018,19 @@ void MainWindow::returnToLogin() {
     currentUser_.reset();
     currentProblem_.reset();
     currentSession_ = {};
+    guestSessionActive_ = false;
 
     if (toolStrip_) {
         toolStrip_->setVisible(false);
     }
     stack_->setCurrentWidget(loginPage_);
+
+    if (profileAction_) {
+        profileAction_->setEnabled(true);
+    }
+    if (resultsAction_) {
+        resultsAction_->setEnabled(true);
+    }
 
     if (pointAction_) {
         QSignalBlocker blocker(pointAction_);
@@ -2104,7 +2163,7 @@ void MainWindow::updateAnswerOptions() {
 }
 
 void MainWindow::recordSessionIfNeeded() {
-    if (!currentUser_) {
+    if (!currentUser_ || guestSessionActive_) {
         return;
     }
 

@@ -5,8 +5,10 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QButtonGroup>
+#include <QColor>
 #include <QLabel>
 #include <QMainWindow>
+#include <QObject>
 #include <QPixmap>
 #include <QRadioButton>
 #include <QString>
@@ -66,6 +68,7 @@ private slots:
     void selectRegisterAvatar();
     void validateRegisterForm();
     void handleRegisterSubmit();
+    void startGuestSession();
     void goToPreviousProblem();
     void goToNextProblem();
     void toggleProblemPanel(bool collapsed);
@@ -88,7 +91,7 @@ private:
     void buildToolButtons(QWidget *toolStrip);
     void updateToolStripLayout();
     void populateProblems();
-    void enterApplication(const UserRecord &user);
+    void enterApplication(const UserRecord &user, bool guestMode = false);
     void returnToLogin();
     QWidget *buildLoginFormPage(QWidget *parent);
     QWidget *buildRegisterFormPage(QWidget *parent);
@@ -132,11 +135,12 @@ private:
     QWidget *appPage_ = nullptr;
     QWidget *loginFormPage_ = nullptr;
     QWidget *registerFormPage_ = nullptr;
-
     QLineEdit *loginUserEdit_ = nullptr;
     QLineEdit *loginPasswordEdit_ = nullptr;
     QPushButton *loginButton_ = nullptr;
+    QPushButton *guestLoginButton_ = nullptr;
     QLabel *loginFeedbackLabel_ = nullptr;
+    bool guestSessionActive_ = false;
 
     QLineEdit *registerNicknameEdit_ = nullptr;
     QLineEdit *registerEmailEdit_ = nullptr;
