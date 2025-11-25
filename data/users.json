@@ -149,6 +149,121 @@
                     "faults": 3,
                     "hits": 2,
                     "timestamp": "2025-11-25T19:46:40.164"
+                },
+                {
+                    "attempts": [
+                        {
+                            "correct": false,
+                            "correctAnswer": "Aproximadamente 295°",
+                            "options": [
+                                {
+                                    "correct": false,
+                                    "text": "Aproximadamente 305°"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "Aproximadamente 285°"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "Aproximadamente 270°"
+                                },
+                                {
+                                    "correct": true,
+                                    "text": "Aproximadamente 295°"
+                                }
+                            ],
+                            "problemId": 4,
+                            "question": "Saliendo de Ceuta quieres arribar al puerto de Barbate. ¿Cuál es el rumbo auténtico inicial que debes establecer desde la bocana de Ceuta?",
+                            "selectedAnswer": "Aproximadamente 285°",
+                            "selectedIndex": 1,
+                            "timestamp": "2025-11-25T20:22:39.127"
+                        },
+                        {
+                            "correct": false,
+                            "correctAnswer": "Aproximadamente 295°",
+                            "options": [
+                                {
+                                    "correct": false,
+                                    "text": "Aproximadamente 305°"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "Aproximadamente 285°"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "Aproximadamente 270°"
+                                },
+                                {
+                                    "correct": true,
+                                    "text": "Aproximadamente 295°"
+                                }
+                            ],
+                            "problemId": 4,
+                            "question": "Saliendo de Ceuta quieres arribar al puerto de Barbate. ¿Cuál es el rumbo auténtico inicial que debes establecer desde la bocana de Ceuta?",
+                            "selectedAnswer": "Aproximadamente 285°",
+                            "selectedIndex": 1,
+                            "timestamp": "2025-11-25T20:22:40.156"
+                        },
+                        {
+                            "correct": false,
+                            "correctAnswer": "5:1",
+                            "options": [
+                                {
+                                    "correct": false,
+                                    "text": "3:1"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "4:1"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "6:1"
+                                },
+                                {
+                                    "correct": true,
+                                    "text": "5:1"
+                                }
+                            ],
+                            "problemId": 5,
+                            "question": "El plan es fondear con 50 metros de cadena a 12 metros de sonda. ¿Qué relación de cadena/sonda estás aplicando?",
+                            "selectedAnswer": "6:1",
+                            "selectedIndex": 2,
+                            "timestamp": "2025-11-25T20:22:41.005"
+                        },
+                        {
+                            "correct": false,
+                            "correctAnswer": "Al Este de la marca",
+                            "options": [
+                                {
+                                    "correct": false,
+                                    "text": "Al Oeste de la marca"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "Al Norte de la marca"
+                                },
+                                {
+                                    "correct": false,
+                                    "text": "Al Sur de la marca"
+                                },
+                                {
+                                    "correct": true,
+                                    "text": "Al Este de la marca"
+                                }
+                            ],
+                            "problemId": 6,
+                            "question": "Observas una marca cardinal Este formada por dos conos negros con vértices opuestos. ¿En qué zona debes navegar para evitar el peligro?",
+                            "selectedAnswer": "Al Norte de la marca",
+                            "selectedIndex": 1,
+                            "timestamp": "2025-11-25T20:22:42.389"
+                        }
+                    ],
+                    "faults": 4,
+                    "hits": 0,
+                    "timestamp": "2025-11-25T20:20:06.666"
                 }
             ]
         }

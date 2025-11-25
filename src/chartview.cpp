@@ -74,7 +74,10 @@ void ChartView::wheelEvent(QWheelEvent *event) {
 void ChartView::mousePressEvent(QMouseEvent *event) {
     if (handNavigationEnabled_ && event->button() == Qt::LeftButton) {
         if (auto *cs = qobject_cast<ChartScene *>(scene())) {
-            if (cs->isRulerAt(mapToScene(event->pos()))) {
+            const QPointF scenePos = mapToScene(event->pos());
+            const bool isRulerTarget = cs->isRulerAt(scenePos);
+            const bool isProtractorTarget = cs->isProtractorAt(scenePos);
+            if (isRulerTarget || isProtractorTarget) {
                 const DragMode savedMode = dragMode();
                 setDragMode(QGraphicsView::NoDrag);
                 QGraphicsView::mousePressEvent(event);

@@ -48,6 +48,7 @@ public:
     void placeText(const QPointF &scenePos, const QString &text);
     void toggleExtremesForSelection();
     void clearMarks();
+    bool isProtractorAt(const QPointF &scenePos) const;
     bool isRulerAt(const QPointF &scenePos) const;
     void clearCrosshair();
 

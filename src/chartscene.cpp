@@ -148,6 +148,15 @@ bool ChartScene::isRulerAt(const QPointF &scenePos) const {
     return ruler_->boundingRect().contains(localPos);
 }
 
+bool ChartScene::isProtractorAt(const QPointF &scenePos) const {
+    if (!protractor_ || !protractor_->isVisible()) {
+        return false;
+    }
+
+    const QPointF localPos = protractor_->mapFromScene(scenePos);
+    return protractor_->boundingRect().contains(localPos);
+}
+
 void ChartScene::placeText(const QPointF &scenePos, const QString &text) {
     if (text.trimmed().isEmpty()) {
         awaitingText_ = false;
@@ -221,9 +230,19 @@ void ChartScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
     const auto targetedItems = items(pos);
     for (auto *item : targetedItems) {
-        if (item == ruler_ || item->parentItem() == ruler_) {
+        const bool isRuler = (item == ruler_ || item->parentItem() == ruler_);
+        if (isRuler) {
             QGraphicsScene::mousePressEvent(event);
             return;
+        }
+
+        const bool isProtractor = (item == protractor_ || item->parentItem() == protractor_);
+        if (isProtractor) {
+            if (currentTool_ == Tool::Select) {
+                QGraphicsScene::mousePressEvent(event);
+                return;
+            }
+            continue;
         }
     }
 

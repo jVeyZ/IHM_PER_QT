@@ -1,7 +1,15 @@
 #pragma once
 
 #include <QGraphicsObject>
-#include <QPainterPath>
+#include <QtSvg/QSvgRenderer>
+#include <memory>
+
+class QPainter;
+class QStyleOptionGraphicsItem;
+class QWidget;
+#include <memory>
+
+class QSvgRenderer;
 
 class ProtractorItem : public QGraphicsObject {
     Q_OBJECT
@@ -15,8 +23,9 @@ public:
     double radius() const;
 
 private:
-    double radius_ = 150.0;
-    QPainterPath tickPath_;
-
-    void rebuildTicks();
+    double radius_ = 200.0;
+    double minRadius_ = 120.0;
+    double maxRadius_ = 400.0;
+    double svgAspectRatio_ = 0.5;
+    std::unique_ptr<QSvgRenderer> svgRenderer_;
 };
