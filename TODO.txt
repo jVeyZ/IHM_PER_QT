@@ -1,0 +1,3 @@
+Estadísticas en una pestaña aparte (Incluir porcentajes de aciertos y algún gráfico)
+Añadir funcionalidad de compas, debe poder dibujar y transportar distancias
+Cambio de iconos
