@@ -39,6 +39,7 @@
 #include <QTextEdit>
 #include <QToolButton>
 #include <QTimer>
+#include <QTextOption>
 #include <QVariant>
 #include <QVBoxLayout>
 #include <QWidgetAction>
@@ -53,7 +54,6 @@ namespace {
 constexpr int kAvatarIconSize = 40;
 constexpr int kAvatarPreviewSize = 96;
 constexpr auto kLightThemePath = ":/styles/modern_light.qss";
-constexpr auto kDarkThemePath = ":/styles/modern_dark.qss";
 constexpr auto kFallbackThemePath = ":/styles/lightblue.qss";
 constexpr auto kDefaultAvatarPath = ":/resources/images/default_avatar.svg";
 constexpr int kProblemPaneDefaultMinWidth = 360;
@@ -75,7 +75,6 @@ MainWindow::MainWindow(UserManager &userManager,
 
     setupUi();
     applyAppTheme();
-    syncThemeAction();
     updateSessionLabels();
 
     if (chartScene_) {
@@ -974,12 +973,6 @@ void MainWindow::validateLoginForm() {
     }
 }
 
-void MainWindow::toggleDarkMode(bool enabled) {
-    darkModeEnabled_ = enabled;
-    applyAppTheme();
-    syncThemeAction();
-}
-
 void MainWindow::setupUi() {
     auto *central = new QWidget(this);
     auto *layout = new QVBoxLayout(central);
@@ -1546,13 +1539,10 @@ QWidget *MainWindow::createAppPage() {
     userMenu_ = new QMenu(userMenuButton_);
     profileAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_profile.svg"), tr("Editar perfil"));
     resultsAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_results.svg"), tr("Historial de sesiones"));
-    darkModeAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_theme.svg"), tr("Modo oscuro"));
-    darkModeAction_->setCheckable(true);
     userMenu_->addSeparator();
     logoutAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_logout.svg"), tr("Cerrar sesión"));
     profileAction_->setIconVisibleInMenu(true);
     resultsAction_->setIconVisibleInMenu(true);
-    darkModeAction_->setIconVisibleInMenu(true);
     logoutAction_->setIconVisibleInMenu(true);
     userMenuButton_->setMenu(userMenu_);
 
@@ -1664,22 +1654,36 @@ QWidget *MainWindow::createAppPage() {
     historyStatusLabel_->setVisible(false);
     historyStatusLabel_->setWordWrap(true);
 
-    problemStatement_ = new QTextEdit(problemBody_);
+    auto *questionSection = new QFrame(problemBody_);
+    questionSection->setObjectName("QuestionSection");
+    auto *questionLayout = new QVBoxLayout(questionSection);
+    questionLayout->setContentsMargins(12, 12, 12, 12);
+    questionLayout->setSpacing(12);
+
+    problemStatement_ = new QTextEdit(questionSection);
     problemStatement_->setObjectName("ProblemStatement");
     problemStatement_->setReadOnly(true);
-    problemStatement_->setMinimumHeight(180);
+    problemStatement_->setWordWrapMode(QTextOption::WordWrap);
+    problemStatement_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    problemStatement_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    problemStatement_->setFixedHeight(220);
+    problemStatement_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    questionLayout->addWidget(problemStatement_);
 
     answerButtons_ = new QButtonGroup(this);
     answerButtons_->setExclusive(true);
 
     answerOptions_.clear();
     for (int index = 0; index < 4; ++index) {
-        auto *option = new QRadioButton(problemBody_);
+        auto *option = new QRadioButton(questionSection);
         option->setObjectName(QStringLiteral("AnswerOption_%1").arg(index));
         option->setVisible(false);
         answerButtons_->addButton(option, index);
         answerOptions_.push_back(option);
+        questionLayout->addWidget(option);
     }
+
+    questionLayout->addStretch(1);
 
     submitButton_ = new QPushButton(tr("Comprobar respuesta"), problemBody_);
     submitButton_->setObjectName("SubmitButton");
@@ -1695,10 +1699,7 @@ QWidget *MainWindow::createAppPage() {
     bodyLayout->addWidget(navigationRow_);
     bodyLayout->addWidget(historyControlsRow_);
     bodyLayout->addWidget(historyStatusLabel_);
-    bodyLayout->addWidget(problemStatement_);
-    for (auto *option : answerOptions_) {
-        bodyLayout->addWidget(option);
-    }
+    bodyLayout->addWidget(questionSection);
     bodyLayout->addStretch(1);
     bodyLayout->addLayout(actionLayout);
 
@@ -1731,7 +1732,6 @@ QWidget *MainWindow::createAppPage() {
 
     connect(profileAction_, &QAction::triggered, this, &MainWindow::showProfileDialog);
     connect(resultsAction_, &QAction::triggered, this, &MainWindow::showResultsDialog);
-    connect(darkModeAction_, &QAction::toggled, this, &MainWindow::toggleDarkMode);
     connect(logoutAction_, &QAction::triggered, this, &MainWindow::logout);
 
     connect(problemCombo_, &QComboBox::currentIndexChanged, this, &MainWindow::loadProblemFromSelection);
@@ -1972,7 +1972,6 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
 
     updateUserPanel();
     updateSessionLabels();
-    syncThemeAction();
 
     if (toolStrip_) {
         toolStrip_->setVisible(true);
@@ -2202,10 +2201,7 @@ void MainWindow::resetAnswerSelection() {
 }
 
 void MainWindow::applyAppTheme() {
-    const QString path = darkModeEnabled_ ? QString::fromLatin1(kDarkThemePath)
-                                          : QString::fromLatin1(kLightThemePath);
-
-    QFile file(path);
+    QFile file(QString::fromLatin1(kLightThemePath));
     QString sheet;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         sheet = QString::fromUtf8(file.readAll());
@@ -2223,41 +2219,18 @@ void MainWindow::applyAppTheme() {
     refreshColorPalette();
 }
 
-void MainWindow::syncThemeAction() {
-    if (!darkModeAction_) {
-        return;
-    }
-    QSignalBlocker blocker(darkModeAction_);
-    darkModeAction_->setChecked(darkModeEnabled_);
-    if (darkModeEnabled_) {
-        darkModeAction_->setText(tr("Modo claro"));
-        darkModeAction_->setIcon(QIcon(":/resources/images/icon_theme_light.svg"));
-    } else {
-        darkModeAction_->setText(tr("Modo oscuro"));
-        darkModeAction_->setIcon(QIcon(":/resources/images/icon_theme.svg"));
-    }
-}
-
 void MainWindow::refreshColorPalette() {
     if (!colorButton_) {
         return;
     }
 
-    const QVector<QColor> themePalette = darkModeEnabled_
-                                             ? QVector<QColor>{
-                                                   QColor("#58a6ff"),
-                                                   QColor("#7ee787"),
-                                                   QColor("#ffa657"),
-                                                   QColor("#d29922"),
-                                                   QColor("#d2a8ff"),
-                                                   QColor("#2ea043")}
-                                             : QVector<QColor>{
-                                                   QColor("#2f81f7"),
-                                                   QColor("#a371f7"),
-                                                   QColor("#f0883e"),
-                                                   QColor("#3fb950"),
-                                                   QColor("#ff5e8a"),
-                                                   QColor("#8b949e")};
+    const QVector<QColor> themePalette{
+        QColor("#2f81f7"),
+        QColor("#a371f7"),
+        QColor("#f0883e"),
+        QColor("#3fb950"),
+        QColor("#ff5e8a"),
+        QColor("#8b949e")};
 
     QVector<QColor> palette;
     palette.push_back(QColor("#000000"));
@@ -2283,15 +2256,11 @@ void MainWindow::refreshColorPalette() {
         action->deleteLater();
     }
 
-    const QColor borderColor = darkModeEnabled_ ? QColor("#30363d") : QColor("#d0d7de");
-    const QColor backgroundColor = darkModeEnabled_ ? QColor("#101823") : QColor("#ffffff");
-    const QColor hoverColor = darkModeEnabled_ ? QColor("#1f6feb") : QColor("#2f81f7");
-    const QString arrowIconPath = darkModeEnabled_
-                                      ? QStringLiteral(":/resources/images/icon_chevron_down_dark.svg")
-                                      : QStringLiteral(":/resources/images/icon_chevron_down_light.svg");
-    const QString selectionColor = darkModeEnabled_
-                                       ? QStringLiteral("rgba(47,129,247,0.25)")
-                                       : QStringLiteral("rgba(47,129,247,0.15)");
+    const QColor borderColor("#d0d7de");
+    const QColor backgroundColor("#ffffff");
+    const QColor hoverColor("#2f81f7");
+    const QString arrowIconPath = QStringLiteral(":/resources/images/icon_chevron_down_light.svg");
+    const QString selectionColor = QStringLiteral("rgba(47,129,247,0.15)");
 
     colorButton_->setStyleSheet(QStringLiteral(
         "QToolButton#ColorDropdownButton { border: 1px solid %1; border-radius: 12px; padding: 2px 14px 2px 6px; "

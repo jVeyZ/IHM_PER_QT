@@ -73,7 +73,6 @@ private slots:
     void goToNextProblem();
     void toggleProblemPanel(bool collapsed);
     void toggleFullscreenMode(bool checked);
-    void toggleDarkMode(bool enabled);
 
 private:
     enum class QuestionPanelMode {
@@ -101,7 +100,6 @@ private:
     void recordSessionIfNeeded();
     void resetAnswerSelection();
     void applyAppTheme();
-    void syncThemeAction();
     void refreshColorPalette();
     void handleColorSelection(const QColor &color);
     void updateColorButtonIcon(const QColor &color);
@@ -158,7 +156,6 @@ private:
     QMenu *userMenu_ = nullptr;
     QAction *profileAction_ = nullptr;
     QAction *resultsAction_ = nullptr;
-    QAction *darkModeAction_ = nullptr;
     QAction *logoutAction_ = nullptr;
     QAction *handAction_ = nullptr;
 
@@ -209,7 +206,6 @@ private:
     QLabel *historyStatusLabel_ = nullptr;
 
     std::optional<ProblemEntry> currentProblem_;
-    bool darkModeEnabled_ = false;
     bool problemPanelCollapsed_ = false;
     QuestionPanelMode panelMode_ = QuestionPanelMode::Practice;
     bool fullScreenModeActive_ = false;

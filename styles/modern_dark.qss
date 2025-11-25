@@ -290,11 +290,16 @@ QLabel#AvatarPreview {
     background-color: #161b22;
 }
 
+QFrame#QuestionSection {
+    background-color: #0e1624;
+    border: 1px solid #2a3244;
+    border-radius: 18px;
+}
+
 QTextEdit#ProblemStatement {
-    background-color: #0d1117;
-    border: 1px solid #30363d;
-    border-radius: 14px;
-    padding: 14px;
+    background-color: transparent;
+    border: none;
+    padding: 0px;
     color: #f0f6fc;
 }
 
