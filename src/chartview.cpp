@@ -56,12 +56,14 @@ void ChartView::resetZoom() {
 
 void ChartView::wheelEvent(QWheelEvent *event) {
     const bool modifierZoom = event->modifiers() & (Qt::ControlModifier | Qt::MetaModifier);
-    const bool trackpadZoom = !modifierZoom && !event->pixelDelta().isNull();
+    const bool hasPixelDelta = !event->pixelDelta().isNull();
+    const bool hasAngleDelta = !event->angleDelta().isNull();
+    const bool trackpadZoom = !modifierZoom && hasPixelDelta;
+    const bool mouseWheelZoom = !hasPixelDelta && hasAngleDelta;
 
-    if (modifierZoom || trackpadZoom) {
+    if (modifierZoom || trackpadZoom || mouseWheelZoom) {
         event->accept();
-        const double angleDelta = event->angleDelta().y();
-        const double direction = angleDelta != 0 ? angleDelta : event->pixelDelta().y();
+        const double direction = hasPixelDelta ? event->pixelDelta().y() : event->angleDelta().y();
         const double factor = direction > 0 ? zoomStep_ : 1.0 / zoomStep_;
         applyZoom(factor, mapToScene(event->position().toPoint()));
     } else {

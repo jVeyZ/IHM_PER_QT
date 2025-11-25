@@ -1450,6 +1450,7 @@ QWidget *MainWindow::createAppPage() {
 
     chartView_ = new ChartView(this);
     chartView_->setScene(chartScene_);
+    chartView_->setHandNavigationEnabled(true);
     chartView_->setFrameShape(QFrame::NoFrame);
     chartView_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     chartView_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -1852,9 +1853,9 @@ void MainWindow::buildToolButtons(QWidget *toolStrip) {
     connect(fullScreenAction_, &QAction::toggled, this, &MainWindow::toggleFullscreenMode);
     addToolButton(fullScreenAction_, QSize(26, 26), QStringLiteral("utility-tool"));
 
-    if (pointAction_) {
-        pointAction_->setChecked(true);
-        setToolFromAction(pointAction_);
+    if (handAction_) {
+        handAction_->setChecked(true);
+        setToolFromAction(handAction_);
     }
 
     updateToolStripLayout();
@@ -1972,14 +1973,14 @@ void MainWindow::returnToLogin() {
     }
     stack_->setCurrentWidget(loginPage_);
 
-    if (handAction_) {
-        QSignalBlocker blocker(handAction_);
-        handAction_->setChecked(false);
-    }
     if (pointAction_) {
         QSignalBlocker blocker(pointAction_);
-        pointAction_->setChecked(true);
-        setToolFromAction(pointAction_);
+        pointAction_->setChecked(false);
+    }
+    if (handAction_) {
+        QSignalBlocker blocker(handAction_);
+        handAction_->setChecked(true);
+        setToolFromAction(handAction_);
     }
 
     if (loginUserEdit_) {
