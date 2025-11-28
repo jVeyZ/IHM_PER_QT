@@ -30,6 +30,9 @@ class QMenu;
 class QFrame;
 class QDateEdit;
 class QSplitter;
+class QTableWidget;
+class StatsTrendWidget;
+class StatsPieWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -87,6 +90,7 @@ private:
     QWidget *createRegisterPage();
     QWidget *createAppPage();
     QWidget *createToolStrip(QWidget *parent);
+    QWidget *createStatisticsPage(QWidget *parent);
     void buildToolButtons(QWidget *toolStrip);
     void updateToolStripLayout();
     void populateProblems();
@@ -112,7 +116,9 @@ private:
     int clampProblemPaneWidth(int totalWidth, int requestedWidth) const;
     void ensureProblemPaneVisible();
     void setQuestionPanelMode(QuestionPanelMode mode);
+    void showStatisticsView(bool active);
     void showStatusBanner(const QString &message, int timeoutMs = 0);
+    void updateStatisticsPanel();
     void buildHistoryAttempts();
     void updateHistoryDisplay();
     void updateHistoryStatusLabel(const QString &statusText = QString());
@@ -153,6 +159,7 @@ private:
     QToolButton *userMenuButton_ = nullptr;
     QToolButton *questionsToggleButton_ = nullptr;
     QToolButton *statsButton_ = nullptr;
+    QToolButton *statisticsButton_ = nullptr;
     QMenu *userMenu_ = nullptr;
     QAction *profileAction_ = nullptr;
     QAction *resultsAction_ = nullptr;
@@ -183,8 +190,10 @@ private:
 
     ChartScene *chartScene_ = nullptr;
     ChartView *chartView_ = nullptr;
+    QStackedWidget *contentStack_ = nullptr;
     QSplitter *contentSplitter_ = nullptr;
     QFrame *topBar_ = nullptr;
+    QWidget *statisticsPage_ = nullptr;
 
     QComboBox *problemCombo_ = nullptr;
     QTextEdit *problemStatement_ = nullptr;
@@ -204,6 +213,17 @@ private:
     QWidget *historyControlsRow_ = nullptr;
     QComboBox *historySessionCombo_ = nullptr;
     QLabel *historyStatusLabel_ = nullptr;
+    QFrame *statsSummaryCard_ = nullptr;
+    QFrame *statsChartCard_ = nullptr;
+    QFrame *statsTableCard_ = nullptr;
+    QLabel *statsTotalValueLabel_ = nullptr;
+    QLabel *statsCorrectValueLabel_ = nullptr;
+    QLabel *statsIncorrectValueLabel_ = nullptr;
+    QLabel *statsAccuracyValueLabel_ = nullptr;
+    QLabel *statsEmptyStateLabel_ = nullptr;
+    StatsTrendWidget *statsTrendWidget_ = nullptr;
+    StatsPieWidget *statsPieWidget_ = nullptr;
+    QTableWidget *statsSessionsTable_ = nullptr;
 
     std::optional<ProblemEntry> currentProblem_;
     bool problemPanelCollapsed_ = false;
@@ -218,6 +238,7 @@ private:
     int lastProblemPaneWidth_ = -1;
     QTimer statusMessageTimer_;
     bool crosshairActive_ = false;
+    bool statisticsViewActive_ = false;
     struct HistorySessionSource {
         QString label;
         const QVector<QuestionAttempt> *attempts = nullptr;

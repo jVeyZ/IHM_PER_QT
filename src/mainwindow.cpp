@@ -8,6 +8,7 @@
 #include <QButtonGroup>
 #include <QCloseEvent>
 #include <QComboBox>
+#include <QAbstractItemView>
 #include <QDate>
 #include <QDateEdit>
 #include <QDateTime>
@@ -15,15 +16,21 @@
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QFrame>
+#include <QGridLayout>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QInputDialog>
 #include <QLabel>
+#include <QFont>
 #include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
 #include <QCursor>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPaintEvent>
+#include <QLinearGradient>
+#include <QPen>
 #include <QRegularExpression>
 #include <QPixmap>
 #include <QPushButton>
@@ -36,6 +43,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QStyle>
+#include <QTableWidget>
 #include <QTextEdit>
 #include <QToolButton>
 #include <QTimer>
@@ -44,6 +52,8 @@
 #include <QVBoxLayout>
 #include <QWidgetAction>
 #include <QMargins>
+#include <QLocale>
+#include <QMap>
 
 #include <algorithm>
 #include <cmath>
@@ -61,7 +71,195 @@ constexpr auto kCorrectAnswerStyle =
     "color: #1f7a4d; font-weight: 600; background-color: rgba(63,185,80,0.18); border-radius: 10px; padding: 6px 10px;";
 constexpr auto kIncorrectAnswerStyle =
     "color: #b00020; font-weight: 600; background-color: rgba(248,113,113,0.18); border-radius: 10px; padding: 6px 10px;";
+constexpr int kMaxStatsChartPoints = 12;
+constexpr int kMaxStatsTableRows = 8;
 }
+
+class StatsTrendWidget : public QWidget {
+public:
+    struct BarData {
+        QString label;
+        double value = 0.0;
+    };
+
+    explicit StatsTrendWidget(QWidget *parent = nullptr)
+        : QWidget(parent) {
+        setMinimumHeight(220);
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        setAttribute(Qt::WA_OpaquePaintEvent, false);
+        setAttribute(Qt::WA_StyledBackground, true);
+        setObjectName("StatsChartWidget");
+    }
+
+    void setBars(const QVector<BarData> &bars) {
+        bars_ = bars;
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent *event) override {
+        QWidget::paintEvent(event);
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        const QRectF canvas = rect().adjusted(32, 16, -48, -48);
+
+        QPen axisPen(palette().mid().color(), 1.0);
+        axisPen.setCapStyle(Qt::SquareCap);
+        painter.setPen(axisPen);
+        painter.drawLine(canvas.bottomLeft(), canvas.bottomRight());
+        painter.drawLine(canvas.bottomLeft(), canvas.topLeft());
+
+        const QVector<int> ticks{0, 25, 50, 75, 100};
+        QPen gridPen(axisPen);
+        gridPen.setStyle(Qt::DotLine);
+        gridPen.setColor(axisPen.color().lighter(135));
+        QFont labelFont = painter.font();
+        labelFont.setPointSizeF(labelFont.pointSizeF() - 1);
+        painter.setFont(labelFont);
+        for (int tick : ticks) {
+            const double y = canvas.bottom() - (tick / 100.0) * canvas.height();
+            painter.setPen(gridPen);
+            painter.drawLine(QPointF(canvas.left(), y), QPointF(canvas.right(), y));
+            painter.setPen(palette().mid().color());
+            painter.drawText(QRectF(canvas.left() - 32, y - 8, 28, 16), Qt::AlignRight | Qt::AlignVCenter, QString::number(tick));
+        }
+
+        if (bars_.isEmpty()) {
+            painter.setPen(palette().mid().color());
+            painter.drawText(canvas, Qt::AlignCenter, QObject::tr("Sin datos todavía"));
+            return;
+        }
+
+        const int count = bars_.size();
+        const double slotWidth = canvas.width() / qMax(1, count);
+        const double barWidth = qMin(40.0, slotWidth * 0.6);
+        const QColor barColor("#1f6feb");
+        const QColor negativeColor("#b00020");
+
+        painter.setPen(Qt::NoPen);
+
+        for (int index = 0; index < count; ++index) {
+            const auto &bar = bars_.at(index);
+            const double value = std::clamp(bar.value, 0.0, 100.0);
+            const double height = (value / 100.0) * canvas.height();
+            const double xCenter = canvas.left() + slotWidth * index + slotWidth / 2.0;
+            const QRectF barRect(xCenter - barWidth / 2.0, canvas.bottom() - height, barWidth, height);
+
+            painter.setBrush(barColor);
+            painter.drawRoundedRect(barRect, 6, 6);
+
+            painter.setPen(palette().mid().color());
+            painter.drawText(QRectF(barRect.left(), canvas.bottom() + 4, barRect.width(), 18), Qt::AlignCenter, bar.label);
+
+            painter.setPen(value >= 50.0 ? barColor : negativeColor);
+            painter.drawText(QRectF(barRect.left(), barRect.top() - 20, barRect.width(), 18), Qt::AlignCenter, QString::number(value, 'f', 0) + QLatin1String("%"));
+
+            painter.setPen(Qt::NoPen);
+        }
+    }
+
+private:
+    QVector<BarData> bars_;
+};
+
+class StatsPieWidget : public QWidget {
+public:
+    explicit StatsPieWidget(QWidget *parent = nullptr)
+        : QWidget(parent) {
+        setMinimumHeight(220);
+        setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        setAttribute(Qt::WA_StyledBackground, true);
+        setObjectName("StatsChartWidget");
+    }
+
+    void setValues(int correct, int incorrect) {
+        if (correct_ == correct && incorrect_ == incorrect) {
+            return;
+        }
+        correct_ = qMax(0, correct);
+        incorrect_ = qMax(0, incorrect);
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent *event) override {
+        QWidget::paintEvent(event);
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        const QRectF paddedRect = rect().adjusted(32, 24, -32, -24);
+        if (paddedRect.width() <= 0 || paddedRect.height() <= 0) {
+            return;
+        }
+
+        constexpr double legendWidth = 150.0;
+        constexpr double legendGap = 24.0;
+        QRectF legendRect = paddedRect;
+        legendRect.setRight(legendRect.left() + legendWidth);
+
+        QRectF chartRect = paddedRect.adjusted(legendWidth + legendGap, 0, 0, 0);
+        if (chartRect.width() <= 0 || chartRect.height() <= 0) {
+            return;
+        }
+
+        const double diameter = qMin(chartRect.width(), chartRect.height());
+        const QPointF center = chartRect.center();
+        const QRectF pieRect(center.x() - diameter / 2.0,
+                             center.y() - diameter / 2.0,
+                             diameter,
+                             diameter);
+
+        const QColor correctColor("#3fb950");
+        const QColor incorrectColor("#f85149");
+
+        const int total = correct_ + incorrect_;
+        if (total <= 0) {
+            painter.setPen(palette().mid().color());
+            painter.drawText(chartRect, Qt::AlignCenter, QObject::tr("Sin datos"));
+            return;
+        }
+
+        painter.setPen(Qt::NoPen);
+        int startAngle = 90 * 16;
+        const double correctRatio = static_cast<double>(correct_) / total;
+        const int totalSpan = 360 * 16;
+        const int correctSpan = static_cast<int>(qRound(correctRatio * totalSpan));
+        const int incorrectSpan = totalSpan - correctSpan;
+
+        painter.setBrush(correctColor);
+        painter.drawPie(pieRect, startAngle, -correctSpan);
+        painter.setBrush(incorrectColor);
+        painter.drawPie(pieRect, startAngle - correctSpan, -incorrectSpan);
+
+        const auto drawLegend = [&](const QPointF &origin, const QColor &color, const QString &text) {
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(color);
+            QRectF swatch(origin, QSizeF(14, 14));
+            painter.drawRoundedRect(swatch, 4, 4);
+            painter.setPen(palette().text().color());
+            painter.drawText(QRectF(swatch.right() + 8, swatch.top() - 4, legendWidth - 40, 24),
+                             Qt::AlignLeft | Qt::AlignVCenter,
+                             text);
+        };
+
+        const QLocale locale;
+        constexpr double legendRowHeight = 28.0;
+        constexpr double legendRowSpacing = 12.0;
+        const double legendBlockHeight = legendRowHeight * 2 + legendRowSpacing;
+        const double legendStartY = legendRect.top() + (legendRect.height() - legendBlockHeight) / 2.0;
+        drawLegend(QPointF(legendRect.left(), legendStartY),
+                   correctColor,
+                   QObject::tr("Correctas (%1)").arg(locale.toString(correct_)));
+        drawLegend(QPointF(legendRect.left(), legendStartY + legendRowHeight + legendRowSpacing),
+                   incorrectColor,
+                   QObject::tr("Incorrectas (%1)").arg(locale.toString(incorrect_)));
+    }
+
+private:
+    int correct_ = 0;
+    int incorrect_ = 0;
+};
 
 MainWindow::MainWindow(UserManager &userManager,
                        ProblemManager &problemManager,
@@ -420,6 +618,14 @@ void MainWindow::updateHistoryNavigationState() {
 }
 
 void MainWindow::setQuestionPanelMode(QuestionPanelMode mode) {
+    if (statisticsViewActive_) {
+        if (statisticsButton_) {
+            QSignalBlocker blocker(statisticsButton_);
+            statisticsButton_->setChecked(false);
+        }
+        showStatisticsView(false);
+    }
+
     ensureProblemPaneVisible();
     panelMode_ = mode;
     const bool practice = panelMode_ == QuestionPanelMode::Practice;
@@ -486,6 +692,276 @@ void MainWindow::setQuestionPanelMode(QuestionPanelMode mode) {
         refreshHistorySessionOptions();
         buildHistoryAttempts();
         updateHistoryDisplay();
+    }
+}
+
+void MainWindow::showStatisticsView(bool active) {
+    if (statisticsButton_) {
+        QSignalBlocker blocker(statisticsButton_);
+        statisticsButton_->setChecked(active);
+    }
+
+    if (!contentStack_ || !statisticsPage_ || !contentSplitter_) {
+        return;
+    }
+
+    if (statisticsViewActive_ == active) {
+        if (active) {
+            updateStatisticsPanel();
+        }
+        return;
+    }
+
+    statisticsViewActive_ = active;
+
+    if (active) {
+        contentStack_->setCurrentWidget(statisticsPage_);
+        if (toolStrip_) {
+            toolStrip_->setVisible(false);
+        }
+        if (collapseProblemButton_) {
+            collapseProblemButton_->setEnabled(false);
+        }
+        if (problemCard_) {
+            problemCard_->setVisible(false);
+        }
+        updateStatisticsPanel();
+
+        if (questionsToggleButton_) {
+            QSignalBlocker blocker(questionsToggleButton_);
+            questionsToggleButton_->setChecked(false);
+        }
+        if (statsButton_) {
+            QSignalBlocker blocker(statsButton_);
+            statsButton_->setChecked(false);
+        }
+        if (statsPieWidget_) {
+            statsPieWidget_->setVisible(true);
+        }
+    } else {
+        if (problemCard_) {
+            problemCard_->setVisible(true);
+        }
+        if (collapseProblemButton_) {
+            collapseProblemButton_->setEnabled(true);
+        }
+        if (toolStrip_) {
+            toolStrip_->setVisible(true);
+        }
+        contentStack_->setCurrentWidget(contentSplitter_);
+
+        const bool practice = panelMode_ == QuestionPanelMode::Practice;
+        if (questionsToggleButton_) {
+            QSignalBlocker blocker(questionsToggleButton_);
+            questionsToggleButton_->setChecked(practice);
+        }
+        if (statsButton_) {
+            QSignalBlocker blocker(statsButton_);
+            statsButton_->setChecked(!practice);
+        }
+    }
+}
+
+void MainWindow::updateStatisticsPanel() {
+    if (!statsTotalValueLabel_ || !statsCorrectValueLabel_ || !statsIncorrectValueLabel_ || !statsAccuracyValueLabel_) {
+        return;
+    }
+
+    struct SessionStatsRow {
+        QDateTime timestamp;
+        int correct = 0;
+        int incorrect = 0;
+        bool isCurrent = false;
+    };
+
+    const auto hasAttempts = [](const SessionRecord &session) {
+        return session.hits > 0 || session.faults > 0 || !session.attempts.isEmpty();
+    };
+
+    const auto computeRow = [&](const SessionRecord &session, bool current) {
+        SessionStatsRow row;
+        row.timestamp = session.timestamp;
+        row.isCurrent = current;
+        row.correct = session.hits;
+        row.incorrect = session.faults;
+
+        if (row.correct == 0 && row.incorrect == 0 && !session.attempts.isEmpty()) {
+            for (const auto &attempt : session.attempts) {
+                if (attempt.correct) {
+                    ++row.correct;
+                } else {
+                    ++row.incorrect;
+                }
+            }
+        }
+
+        return row;
+    };
+
+    QVector<SessionStatsRow> rows;
+    rows.reserve(currentUser_ ? currentUser_->sessions.size() + 1 : 1);
+
+    if (hasAttempts(currentSession_)) {
+        rows.push_back(computeRow(currentSession_, true));
+    }
+
+    QMap<QDate, SessionStatsRow> aggregatedByDate;
+    if (currentUser_) {
+        for (const auto &session : currentUser_->sessions) {
+            if (!hasAttempts(session)) {
+                continue;
+            }
+            SessionStatsRow row = computeRow(session, false);
+            const QDate day = row.timestamp.date();
+            auto it = aggregatedByDate.find(day);
+            if (it == aggregatedByDate.end()) {
+                aggregatedByDate.insert(day, row);
+            } else {
+                it->correct += row.correct;
+                it->incorrect += row.incorrect;
+                if (row.timestamp > it->timestamp) {
+                    it->timestamp = row.timestamp;
+                }
+            }
+        }
+    }
+
+    for (auto it = aggregatedByDate.begin(); it != aggregatedByDate.end(); ++it) {
+        rows.push_back(it.value());
+    }
+
+    const auto totalFromRows = [](const SessionStatsRow &row) {
+        return row.correct + row.incorrect;
+    };
+
+    QLocale locale;
+
+    if (rows.isEmpty()) {
+        statsTotalValueLabel_->setText(locale.toString(0));
+        statsCorrectValueLabel_->setText(locale.toString(0));
+        statsIncorrectValueLabel_->setText(locale.toString(0));
+        statsAccuracyValueLabel_->setText(QStringLiteral("--"));
+
+        if (statsTrendWidget_) {
+            statsTrendWidget_->setBars({});
+        }
+        if (statsPieWidget_) {
+            statsPieWidget_->setValues(0, 0);
+        }
+        if (statsSessionsTable_) {
+            statsSessionsTable_->setRowCount(0);
+        }
+        if (statsSummaryCard_) {
+            statsSummaryCard_->setVisible(false);
+        }
+        if (statsChartCard_) {
+            statsChartCard_->setVisible(false);
+        }
+        if (statsTableCard_) {
+            statsTableCard_->setVisible(false);
+        }
+        if (statsEmptyStateLabel_) {
+            statsEmptyStateLabel_->setVisible(true);
+        }
+        return;
+    }
+
+    if (statsSummaryCard_) {
+        statsSummaryCard_->setVisible(true);
+    }
+    if (statsChartCard_) {
+        statsChartCard_->setVisible(true);
+    }
+    if (statsTableCard_) {
+        statsTableCard_->setVisible(true);
+    }
+    if (statsEmptyStateLabel_) {
+        statsEmptyStateLabel_->setVisible(false);
+    }
+
+    int totalCorrect = 0;
+    int totalIncorrect = 0;
+    for (const auto &row : rows) {
+        totalCorrect += row.correct;
+        totalIncorrect += row.incorrect;
+    }
+
+    const int totalAnswered = totalCorrect + totalIncorrect;
+    const double accuracy = totalAnswered > 0 ? (static_cast<double>(totalCorrect) * 100.0) / totalAnswered : 0.0;
+
+    statsTotalValueLabel_->setText(locale.toString(totalAnswered));
+    statsCorrectValueLabel_->setText(locale.toString(totalCorrect));
+    statsIncorrectValueLabel_->setText(locale.toString(totalIncorrect));
+    statsAccuracyValueLabel_->setText(totalAnswered > 0 ? tr("%1 %").arg(locale.toString(accuracy, 'f', 1)) : QStringLiteral("--"));
+
+    QVector<SessionStatsRow> chronologicalRows = rows;
+    std::sort(chronologicalRows.begin(), chronologicalRows.end(), [](const SessionStatsRow &a, const SessionStatsRow &b) {
+        return a.timestamp < b.timestamp;
+    });
+
+    QVector<StatsTrendWidget::BarData> chartBars;
+    chartBars.reserve(qMin(kMaxStatsChartPoints, chronologicalRows.size()));
+    const int startIndex = qMax(0, chronologicalRows.size() - kMaxStatsChartPoints);
+    for (int idx = startIndex; idx < chronologicalRows.size(); ++idx) {
+        const auto &row = chronologicalRows.at(idx);
+        const int answered = totalFromRows(row);
+        const double rowAccuracy = answered > 0 ? (static_cast<double>(row.correct) * 100.0) / answered : 0.0;
+        StatsTrendWidget::BarData bar;
+        if (row.timestamp.isValid()) {
+            bar.label = row.timestamp.toString("dd/MM");
+        } else {
+            bar.label = QString::number(idx - startIndex + 1);
+        }
+        if (row.isCurrent) {
+            bar.label = tr("Hoy");
+        }
+        bar.value = rowAccuracy;
+        chartBars.push_back(std::move(bar));
+    }
+    if (statsTrendWidget_) {
+        statsTrendWidget_->setBars(chartBars);
+    }
+    if (statsPieWidget_) {
+        statsPieWidget_->setValues(totalCorrect, totalIncorrect);
+    }
+
+    std::sort(rows.begin(), rows.end(), [](const SessionStatsRow &a, const SessionStatsRow &b) {
+        if (a.timestamp == b.timestamp) {
+            return a.isCurrent && !b.isCurrent;
+        }
+        return a.timestamp > b.timestamp;
+    });
+
+    if (statsSessionsTable_) {
+        const int displayRows = qMin<int>(kMaxStatsTableRows, rows.size());
+        statsSessionsTable_->setRowCount(displayRows);
+
+        for (int rowIndex = 0; rowIndex < displayRows; ++rowIndex) {
+            const auto &row = rows.at(rowIndex);
+            const int answered = totalFromRows(row);
+            const double rowAccuracy = answered > 0 ? (static_cast<double>(row.correct) * 100.0) / answered : 0.0;
+
+            const QString dateText = row.isCurrent && row.timestamp.isValid()
+                                         ? tr("Sesión actual (%1)").arg(row.timestamp.toString("dd/MM hh:mm"))
+                                         : row.timestamp.isValid() ? row.timestamp.toString("dd/MM/yyyy hh:mm")
+                                                                   : tr("Sin fecha");
+
+            auto *dateItem = new QTableWidgetItem(dateText);
+            statsSessionsTable_->setItem(rowIndex, 0, dateItem);
+
+            const auto makeNumericItem = [&](const QString &text) {
+                auto *item = new QTableWidgetItem(text);
+                item->setTextAlignment(Qt::AlignCenter);
+                return item;
+            };
+
+            statsSessionsTable_->setItem(rowIndex, 1, makeNumericItem(locale.toString(answered)));
+            statsSessionsTable_->setItem(rowIndex, 2, makeNumericItem(locale.toString(row.correct)));
+            statsSessionsTable_->setItem(rowIndex, 3, makeNumericItem(locale.toString(row.incorrect)));
+            statsSessionsTable_->setItem(rowIndex, 4, makeNumericItem(tr("%1 %").arg(locale.toString(rowAccuracy, 'f', 1))));
+        }
+
+        statsSessionsTable_->resizeRowsToContents();
     }
 }
 
@@ -1515,11 +1991,23 @@ QWidget *MainWindow::createAppPage() {
 
     statsButton_ = new QToolButton(topBar);
     statsButton_->setObjectName("StatsButton");
-    statsButton_->setText(tr("Estadísticas"));
+    statsButton_->setText(tr("Histórico"));
     statsButton_->setAutoRaise(true);
     statsButton_->setToolButtonStyle(Qt::ToolButtonTextOnly);
     statsButton_->setCheckable(true);
     statsButton_->setEnabled(false);
+
+    auto *historyStatsSeparator = new QLabel(tr("|"), topBar);
+    historyStatsSeparator->setObjectName("HistoryStatsSeparator");
+    historyStatsSeparator->setStyleSheet(QStringLiteral("color: #6e7781;"));
+
+    statisticsButton_ = new QToolButton(topBar);
+    statisticsButton_->setObjectName("StatisticsButton");
+    statisticsButton_->setText(tr("Estadísticas"));
+    statisticsButton_->setAutoRaise(true);
+    statisticsButton_->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    statisticsButton_->setCheckable(true);
+    statisticsButton_->setEnabled(false);
 
     sessionStatsLabel_ = new QLabel(tr("Aciertos: 0 · Fallos: 0"), topBar);
     sessionStatsLabel_->setObjectName("SessionStats");
@@ -1551,6 +2039,8 @@ QWidget *MainWindow::createAppPage() {
     topLayout->addWidget(userSummaryLabel_);
     topLayout->addWidget(questionsToggleButton_);
     topLayout->addWidget(statsButton_);
+    topLayout->addWidget(historyStatsSeparator);
+    topLayout->addWidget(statisticsButton_);
     topLayout->addStretch(1);
     topLayout->addWidget(sessionStatsLabel_);
     topLayout->addWidget(statusMessageLabel_);
@@ -1715,7 +2205,14 @@ QWidget *MainWindow::createAppPage() {
     contentSplitter_->setStretchFactor(0, 3);
     contentSplitter_->setStretchFactor(1, 2);
 
-    layout->addWidget(contentSplitter_, 1);
+    contentStack_ = new QStackedWidget(page);
+    contentStack_->setObjectName("ContentStack");
+    contentStack_->addWidget(contentSplitter_);
+    statisticsPage_ = createStatisticsPage(contentStack_);
+    contentStack_->addWidget(statisticsPage_);
+    contentStack_->setCurrentWidget(contentSplitter_);
+
+    layout->addWidget(contentStack_, 1);
 
     auto *viewToggleGroup = new QButtonGroup(this);
     viewToggleGroup->setExclusive(true);
@@ -1729,6 +2226,10 @@ QWidget *MainWindow::createAppPage() {
     connect(statsButton_, &QToolButton::clicked, this, [this]() {
         setQuestionPanelMode(QuestionPanelMode::History);
     });
+
+    if (statisticsButton_) {
+        connect(statisticsButton_, &QToolButton::toggled, this, &MainWindow::showStatisticsView);
+    }
 
     connect(profileAction_, &QAction::triggered, this, &MainWindow::showProfileDialog);
     connect(resultsAction_, &QAction::triggered, this, &MainWindow::showResultsDialog);
@@ -1756,6 +2257,112 @@ QWidget *MainWindow::createAppPage() {
     toggleProblemPanel(false);
     updateProblemNavigationState();
     applyProblemPaneConstraints();
+
+    return page;
+}
+
+QWidget *MainWindow::createStatisticsPage(QWidget *parent) {
+    auto *page = new QWidget(parent);
+    page->setObjectName("StatisticsPage");
+    auto *layout = new QVBoxLayout(page);
+    layout->setContentsMargins(24, 24, 24, 24);
+    layout->setSpacing(14);
+
+    auto *title = new QLabel(tr("Panel de estadísticas"), page);
+    title->setObjectName("StatisticsTitle");
+
+    statsSummaryCard_ = new QFrame(page);
+    statsSummaryCard_->setObjectName("StatsSummaryCard");
+    auto *summaryLayout = new QGridLayout(statsSummaryCard_);
+    summaryLayout->setContentsMargins(24, 20, 24, 20);
+    summaryLayout->setSpacing(18);
+
+    const auto createStatBlock = [&](const QString &labelText, QLabel *&valueLabel) {
+        auto *container = new QWidget(statsSummaryCard_);
+        container->setObjectName("StatsSummaryBlock");
+        auto *containerLayout = new QVBoxLayout(container);
+        containerLayout->setContentsMargins(0, 0, 0, 0);
+        containerLayout->setSpacing(4);
+        containerLayout->setAlignment(Qt::AlignCenter);
+
+        auto *label = new QLabel(labelText, container);
+        label->setObjectName("StatsBlockLabel");
+        label->setAlignment(Qt::AlignCenter);
+
+        valueLabel = new QLabel(QStringLiteral("--"), container);
+        valueLabel->setObjectName("StatsBlockValue");
+        valueLabel->setAlignment(Qt::AlignCenter);
+
+        containerLayout->addWidget(label);
+        containerLayout->addWidget(valueLabel);
+        return container;
+    };
+
+    summaryLayout->addWidget(createStatBlock(tr("Respondidas"), statsTotalValueLabel_), 0, 0);
+    summaryLayout->addWidget(createStatBlock(tr("Correctas"), statsCorrectValueLabel_), 0, 1);
+    summaryLayout->addWidget(createStatBlock(tr("Incorrectas"), statsIncorrectValueLabel_), 0, 2);
+    summaryLayout->addWidget(createStatBlock(tr("Precisión"), statsAccuracyValueLabel_), 0, 3);
+    summaryLayout->setColumnStretch(0, 1);
+    summaryLayout->setColumnStretch(1, 1);
+    summaryLayout->setColumnStretch(2, 1);
+    summaryLayout->setColumnStretch(3, 1);
+
+    statsChartCard_ = new QFrame(page);
+    statsChartCard_->setObjectName("StatsChartCard");
+    auto *chartLayout = new QVBoxLayout(statsChartCard_);
+    chartLayout->setContentsMargins(24, 20, 24, 24);
+    chartLayout->setSpacing(12);
+
+    auto *chartTitle = new QLabel(tr("Tendencia y distribución"), statsChartCard_);
+    chartTitle->setObjectName("StatsBlockLabel");
+    chartLayout->addWidget(chartTitle);
+
+    auto *chartContentLayout = new QHBoxLayout();
+    chartContentLayout->setContentsMargins(0, 0, 0, 0);
+    chartContentLayout->setSpacing(16);
+
+    statsTrendWidget_ = new StatsTrendWidget(statsChartCard_);
+    statsPieWidget_ = new StatsPieWidget(statsChartCard_);
+    chartContentLayout->addWidget(statsTrendWidget_, 3);
+    chartContentLayout->addWidget(statsPieWidget_, 2);
+
+    chartLayout->addLayout(chartContentLayout);
+
+    statsTableCard_ = new QFrame(page);
+    statsTableCard_->setObjectName("StatsTableCard");
+    auto *tableLayout = new QVBoxLayout(statsTableCard_);
+    tableLayout->setContentsMargins(24, 20, 24, 24);
+    tableLayout->setSpacing(12);
+
+    auto *tableTitle = new QLabel(tr("Sesiones recientes"), statsTableCard_);
+    tableTitle->setObjectName("StatsBlockLabel");
+
+    statsSessionsTable_ = new QTableWidget(statsTableCard_);
+    statsSessionsTable_->setObjectName("StatsSessionsTable");
+    statsSessionsTable_->setColumnCount(5);
+    statsSessionsTable_->setHorizontalHeaderLabels({tr("Fecha"), tr("Respondidas"), tr("Correctas"), tr("Incorrectas"), tr("Precisión")});
+    statsSessionsTable_->horizontalHeader()->setStretchLastSection(true);
+    statsSessionsTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    statsSessionsTable_->verticalHeader()->setVisible(false);
+    statsSessionsTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    statsSessionsTable_->setSelectionMode(QAbstractItemView::NoSelection);
+    statsSessionsTable_->setFocusPolicy(Qt::NoFocus);
+    statsSessionsTable_->setShowGrid(false);
+    statsSessionsTable_->setAlternatingRowColors(true);
+
+    tableLayout->addWidget(tableTitle);
+    tableLayout->addWidget(statsSessionsTable_, 1);
+
+    statsEmptyStateLabel_ = new QLabel(tr("Todavía no hay datos de práctica. Responde algunas preguntas para generar estadísticas."), page);
+    statsEmptyStateLabel_->setAlignment(Qt::AlignCenter);
+    statsEmptyStateLabel_->setWordWrap(true);
+    statsEmptyStateLabel_->setVisible(false);
+
+    layout->addWidget(title);
+    layout->addWidget(statsSummaryCard_);
+    layout->addWidget(statsChartCard_);
+    layout->addWidget(statsTableCard_, 1);
+    layout->addWidget(statsEmptyStateLabel_, 0, Qt::AlignCenter);
 
     return page;
 }
@@ -1984,6 +2591,12 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
     if (statsButton_) {
         statsButton_->setEnabled(true);
     }
+    if (statisticsButton_) {
+        statisticsButton_->setEnabled(true);
+        QSignalBlocker blocker(statisticsButton_);
+        statisticsButton_->setChecked(false);
+    }
+    showStatisticsView(false);
     stack_->setCurrentWidget(appPage_);
 
     showStatusBanner(tr("Bienvenido/a, %1").arg(user.nickname), 4000);
@@ -2090,6 +2703,13 @@ void MainWindow::returnToLogin() {
     if (statsButton_) {
         statsButton_->setEnabled(false);
     }
+    if (statisticsButton_) {
+        QSignalBlocker blocker(statisticsButton_);
+        statisticsButton_->setChecked(false);
+        statisticsButton_->setEnabled(false);
+    }
+
+    showStatisticsView(false);
 
     userSummaryLabel_->setText(tr("Sin sesión activa"));
     sessionStatsLabel_->setText(tr("Aciertos: 0 · Fallos: 0"));
@@ -2097,6 +2717,7 @@ void MainWindow::returnToLogin() {
     userMenuButton_->setToolTip(QString());
 
     setQuestionPanelMode(QuestionPanelMode::Practice);
+    updateStatisticsPanel();
 }
 
 void MainWindow::updateUserPanel() {
@@ -2121,6 +2742,7 @@ void MainWindow::updateSessionLabels() {
     sessionStatsLabel_->setText(tr("Aciertos: %1 · Fallos: %2")
                                     .arg(currentSession_.hits)
                                     .arg(currentSession_.faults));
+    updateStatisticsPanel();
 }
 
 void MainWindow::updateAnswerOptions() {

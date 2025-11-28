@@ -85,7 +85,6 @@ qt_add_resources(ProyectoPER app_resources
         resources/images/icon_chevron_down_light.svg
         resources/images/icon_chevron_down_dark.svg
         styles/modern_light.qss
-        styles/modern_dark.qss
         styles/lightblue.qss
 )
 
