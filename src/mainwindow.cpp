@@ -115,7 +115,10 @@ protected:
         gridPen.setStyle(Qt::DotLine);
         gridPen.setColor(axisPen.color().lighter(135));
         QFont labelFont = painter.font();
-        labelFont.setPointSizeF(labelFont.pointSizeF() - 1);
+        const qreal currentSize = labelFont.pointSizeF();
+        if (currentSize > 0.0) {
+            labelFont.setPointSizeF(qMax<qreal>(currentSize - 1.0, 1.0));
+        }
         painter.setFont(labelFont);
         for (int tick : ticks) {
             const double y = canvas.bottom() - (tick / 100.0) * canvas.height();
