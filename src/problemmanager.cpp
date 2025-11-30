@@ -1,55 +1,38 @@
 #include "problemmanager.h"
 
-#include <QFile>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QRandomGenerator>
+#include <utility>
 
-ProblemManager::ProblemManager(QString storagePath, QObject *parent)
-    : QObject(parent), storagePath_(std::move(storagePath)) {}
+ProblemManager::ProblemManager(Navigation &navigation, QObject *parent)
+    : QObject(parent), navigation_(navigation) {}
 
 bool ProblemManager::load() {
     problems_.clear();
+    navigation_.reload();
 
-    QFile file(storagePath_);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return false;
-    }
+    const auto &navProblems = navigation_.problems();
+    problems_.reserve(navProblems.size());
 
-    const auto doc = QJsonDocument::fromJson(file.readAll());
-    if (!doc.isObject()) {
-        return false;
-    }
+    int nextId = 1;
+    const QString defaultCategory = tr("Banco navdb");
 
-    const auto root = doc.object();
-    const auto array = root.value("problems").toArray();
-    problems_.reserve(array.size());
+    for (const auto &navProblem : navProblems) {
+        ProblemEntry entry;
+        entry.id = nextId++;
+        entry.category = defaultCategory;
+        entry.text = navProblem.text();
 
-    for (const auto &value : array) {
-        if (!value.isObject()) {
-            continue;
-        }
-        const auto obj = value.toObject();
-        ProblemEntry problem;
-        problem.id = obj.value("id").toInt(-1);
-        problem.category = obj.value("category").toString();
-        problem.text = obj.value("text").toString();
-
-        const auto answersArray = obj.value("answers").toArray();
-        for (const auto &answerValue : answersArray) {
-            if (!answerValue.isObject()) {
-                continue;
-            }
-            const auto answerObj = answerValue.toObject();
-            AnswerOption answer;
-            answer.text = answerObj.value("text").toString();
-            answer.valid = answerObj.value("valid").toBool(false);
-            problem.answers.push_back(answer);
+        const auto &answers = navProblem.answers();
+        entry.answers.reserve(answers.size());
+        for (const auto &answer : answers) {
+            AnswerOption option;
+            option.text = answer.text();
+            option.valid = answer.validity();
+            entry.answers.push_back(option);
         }
 
-        if (!problem.answers.isEmpty()) {
-            problems_.push_back(problem);
+        if (!entry.answers.isEmpty()) {
+            problems_.push_back(std::move(entry));
         }
     }
 

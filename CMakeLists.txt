@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 project(ProyectoPER LANGUAGES CXX)
 
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -8,7 +10,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 6.5 COMPONENTS Widgets Gui Svg REQUIRED)
+find_package(Qt6 6.5 COMPONENTS Widgets Gui Svg Sql REQUIRED)
 
 qt_standard_project_setup()
 
@@ -46,7 +48,9 @@ qt_add_executable(ProyectoPER
     ${PROJECT_HEADERS}
 )
 
-target_include_directories(ProyectoPER PRIVATE include)
+target_include_directories(ProyectoPER PRIVATE
+    include
+)
 
 target_precompile_headers(ProyectoPER PRIVATE <cstdio>)
 
@@ -54,38 +58,20 @@ target_link_libraries(ProyectoPER PRIVATE
     Qt6::Widgets
     Qt6::Gui
     Qt6::Svg
+    Qt6::Sql
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/libnavlib.a
 )
 
+add_custom_command(TARGET ProyectoPER POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/navdb.sqlite
+        $<TARGET_FILE_DIR:ProyectoPER>/navdb.sqlite)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/navdb.sqlite
+        DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 qt_add_resources(ProyectoPER app_resources
-    PREFIX "/"
-    FILES
-        resources/images/carta_nautica.png
-        resources/images/default_avatar.svg
-        resources/images/icon_hand.svg
-        resources/images/icon_point.svg
-        resources/images/icon_line.svg
-        resources/images/icon_arc.svg
-        resources/images/icon_text.svg
-        resources/images/icon_fullscreen.svg
-        resources/images/icon_eraser.svg
-        resources/images/icon_clean.svg
-        resources/images/icon_select.svg
-        resources/images/icon_crosshair.svg
-        resources/images/icon_protractor.svg
-        resources/images/icon_ruler.svg
-        resources/images/icon_extremes.svg
-        resources/images/icon_zoom_in.svg
-        resources/images/icon_zoom_out.svg
-        resources/images/icon_zoom_reset.svg
-        resources/images/icon_cross.svg
-            resources/images/icon_logout.svg
-            resources/images/icon_profile.svg
-            resources/images/icon_results.svg
-            resources/images/icon_theme.svg
-        resources/images/icon_chevron_down_light.svg
-        resources/images/icon_chevron_down_dark.svg
-        styles/modern_light.qss
-        styles/lightblue.qss
+    resources/app_resources.qrc
 )
 
 install(TARGETS ProyectoPER)

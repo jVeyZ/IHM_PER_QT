@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "problemmanager.h"
 #include "usermanager.h"
+#include "navigation.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -42,17 +43,16 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName(QStringLiteral("UPV"));
     QCoreApplication::setApplicationName(QStringLiteral("Proyecto PER"));
 
-    const QString usersPath = dataPath(QStringLiteral("data/users.json"));
     const QString avatarsDir = dataPath(QStringLiteral("data/avatars"));
-    const QString problemsPath = dataPath(QStringLiteral("data/problems.json"));
+    Navigation &navigation = Navigation::instance();
 
-    UserManager userManager(usersPath, avatarsDir);
+    UserManager userManager(navigation, avatarsDir);
     if (!userManager.load()) {
         QMessageBox::critical(nullptr, QObject::tr("Error"), QObject::tr("No se pudo cargar la información de usuarios."));
         return EXIT_FAILURE;
     }
 
-    ProblemManager problemManager(problemsPath);
+    ProblemManager problemManager(navigation);
     if (!problemManager.load()) {
         QMessageBox::critical(nullptr, QObject::tr("Error"), QObject::tr("No se pudieron cargar los problemas disponibles."));
         return EXIT_FAILURE;
