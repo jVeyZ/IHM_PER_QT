@@ -73,6 +73,7 @@ constexpr auto kIncorrectAnswerStyle =
     "color: #b00020; font-weight: 600; background-color: rgba(248,113,113,0.18); border-radius: 10px; padding: 6px 10px;";
 constexpr int kMaxStatsChartPoints = 12;
 constexpr int kMaxStatsTableRows = 8;
+constexpr int kNavigationButtonSize = 46;
 }
 
 class StatsTrendWidget : public QWidget {
@@ -2106,7 +2107,7 @@ QWidget *MainWindow::createAppPage() {
     prevProblemButton_->setIcon(style()->standardIcon(QStyle::SP_ArrowBack));
     prevProblemButton_->setIconSize(QSize(20, 20));
     prevProblemButton_->setToolTip(tr("Pregunta anterior"));
-    prevProblemButton_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    prevProblemButton_->setFixedSize(kNavigationButtonSize, kNavigationButtonSize);
 
     problemCombo_ = new QComboBox(problemBody_);
     problemCombo_->setObjectName("ProblemSelector");
@@ -2118,7 +2119,7 @@ QWidget *MainWindow::createAppPage() {
     nextProblemButton_->setIcon(style()->standardIcon(QStyle::SP_ArrowForward));
     nextProblemButton_->setIconSize(QSize(20, 20));
     nextProblemButton_->setToolTip(tr("Pregunta siguiente"));
-    nextProblemButton_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    nextProblemButton_->setFixedSize(kNavigationButtonSize, kNavigationButtonSize);
 
     randomButton_ = new QPushButton(tr("Aleatorio"), problemBody_);
     randomButton_->setObjectName("RandomButton");
@@ -2181,6 +2182,7 @@ QWidget *MainWindow::createAppPage() {
     submitButton_ = new QPushButton(tr("Comprobar respuesta"), problemBody_);
     submitButton_->setObjectName("SubmitButton");
     submitButton_->setEnabled(false);
+    submitButton_->setFixedHeight(kNavigationButtonSize);
 
     auto *actionLayout = new QHBoxLayout();
     actionLayout->setContentsMargins(0, 0, 0, 0);
@@ -2273,6 +2275,7 @@ QWidget *MainWindow::createStatisticsPage(QWidget *parent) {
 
     auto *title = new QLabel(tr("Panel de estadísticas"), page);
     title->setObjectName("StatisticsTitle");
+    title->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
     statsSummaryCard_ = new QFrame(page);
     statsSummaryCard_->setObjectName("StatsSummaryCard");
@@ -2357,8 +2360,10 @@ QWidget *MainWindow::createStatisticsPage(QWidget *parent) {
     tableLayout->addWidget(statsSessionsTable_, 1);
 
     statsEmptyStateLabel_ = new QLabel(tr("Todavía no hay datos de práctica. Responde algunas preguntas para generar estadísticas."), page);
-    statsEmptyStateLabel_->setAlignment(Qt::AlignCenter);
+    statsEmptyStateLabel_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
     statsEmptyStateLabel_->setWordWrap(true);
+    statsEmptyStateLabel_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    statsEmptyStateLabel_->setMinimumHeight(220);
     statsEmptyStateLabel_->setVisible(false);
 
     layout->addWidget(title);

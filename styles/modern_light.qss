@@ -376,7 +376,7 @@ QPushButton#RandomButton:pressed {
 }
 
 QPushButton#SubmitButton {
-    margin-top: 8px;
+    margin-top: 0px;
 }
 
 QPushButton#RegisterButton {
