@@ -46,6 +46,7 @@ set(PROJECT_HEADERS
 qt_add_executable(ProyectoPER
     ${PROJECT_SOURCES}
     ${PROJECT_HEADERS}
+    resources/app_resources.qrc
 )
 
 target_include_directories(ProyectoPER PRIVATE
@@ -55,11 +56,11 @@ target_include_directories(ProyectoPER PRIVATE
 target_precompile_headers(ProyectoPER PRIVATE <cstdio>)
 
 target_link_libraries(ProyectoPER PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/libnavlib.a
     Qt6::Widgets
     Qt6::Gui
     Qt6::Svg
     Qt6::Sql
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/libnavlib.a
 )
 
 add_custom_command(TARGET ProyectoPER POST_BUILD
@@ -69,9 +70,5 @@ add_custom_command(TARGET ProyectoPER POST_BUILD
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/navdb.sqlite
         DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-qt_add_resources(ProyectoPER app_resources
-    resources/app_resources.qrc
-)
 
 install(TARGETS ProyectoPER)

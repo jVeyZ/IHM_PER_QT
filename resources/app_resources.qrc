@@ -1,31 +1,31 @@
 <RCC>
     <qresource prefix="/">
-        <file>resources/images/carta_nautica.png</file>
-        <file>resources/images/default_avatar.svg</file>
-        <file>resources/images/icon_hand.svg</file>
-        <file>resources/images/icon_point.svg</file>
-        <file>resources/images/icon_line.svg</file>
-        <file>resources/images/icon_arc.svg</file>
-        <file>resources/images/icon_text.svg</file>
-        <file>resources/images/icon_fullscreen.svg</file>
-        <file>resources/images/icon_eraser.svg</file>
-        <file>resources/images/icon_clean.svg</file>
-        <file>resources/images/icon_select.svg</file>
-        <file>resources/images/icon_crosshair.svg</file>
-        <file>resources/images/icon_protractor.svg</file>
-        <file>resources/images/icon_ruler.svg</file>
-        <file>resources/images/icon_extremes.svg</file>
-        <file>resources/images/icon_zoom_in.svg</file>
-        <file>resources/images/icon_zoom_out.svg</file>
-        <file>resources/images/icon_zoom_reset.svg</file>
-        <file>resources/images/icon_cross.svg</file>
-        <file>resources/images/icon_logout.svg</file>
-        <file>resources/images/icon_profile.svg</file>
-        <file>resources/images/icon_results.svg</file>
-        <file>resources/images/icon_theme.svg</file>
-        <file>resources/images/icon_chevron_down_light.svg</file>
-        <file>resources/images/icon_chevron_down_dark.svg</file>
-        <file>styles/modern_light.qss</file>
-        <file>styles/lightblue.qss</file>
+        <file alias="resources/images/carta_nautica.png">images/carta_nautica.png</file>
+        <file alias="resources/images/default_avatar.svg">images/default_avatar.svg</file>
+        <file alias="resources/images/icon_hand.svg">images/icon_hand.svg</file>
+        <file alias="resources/images/icon_point.svg">images/icon_point.svg</file>
+        <file alias="resources/images/icon_line.svg">images/icon_line.svg</file>
+        <file alias="resources/images/icon_arc.svg">images/icon_arc.svg</file>
+        <file alias="resources/images/icon_text.svg">images/icon_text.svg</file>
+        <file alias="resources/images/icon_fullscreen.svg">images/icon_fullscreen.svg</file>
+        <file alias="resources/images/icon_eraser.svg">images/icon_eraser.svg</file>
+        <file alias="resources/images/icon_clean.svg">images/icon_clean.svg</file>
+        <file alias="resources/images/icon_select.svg">images/icon_select.svg</file>
+        <file alias="resources/images/icon_crosshair.svg">images/icon_crosshair.svg</file>
+        <file alias="resources/images/icon_protractor.svg">images/icon_protractor.svg</file>
+        <file alias="resources/images/icon_ruler.svg">images/icon_ruler.svg</file>
+        <file alias="resources/images/icon_extremes.svg">images/icon_extremes.svg</file>
+        <file alias="resources/images/icon_zoom_in.svg">images/icon_zoom_in.svg</file>
+        <file alias="resources/images/icon_zoom_out.svg">images/icon_zoom_out.svg</file>
+        <file alias="resources/images/icon_zoom_reset.svg">images/icon_zoom_reset.svg</file>
+        <file alias="resources/images/icon_cross.svg">images/icon_cross.svg</file>
+        <file alias="resources/images/icon_logout.svg">images/icon_logout.svg</file>
+        <file alias="resources/images/icon_profile.svg">images/icon_profile.svg</file>
+        <file alias="resources/images/icon_results.svg">images/icon_results.svg</file>
+        <file alias="resources/images/icon_theme.svg">images/icon_theme.svg</file>
+        <file alias="resources/images/icon_chevron_down_light.svg">images/icon_chevron_down_light.svg</file>
+        <file alias="resources/images/icon_chevron_down_dark.svg">images/icon_chevron_down_dark.svg</file>
+        <file alias="styles/modern_light.qss">../styles/modern_light.qss</file>
+        <file alias="styles/lightblue.qss">../styles/lightblue.qss</file>
     </qresource>
 </RCC>
