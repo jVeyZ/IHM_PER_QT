@@ -325,14 +325,13 @@ QImage UserManager::loadAvatarImage(const QString &path) const {
 QString UserManager::resolveDatabasePath() const {
 	QDir appDir(QCoreApplication::applicationDirPath());
 	const QString localPath = appDir.absoluteFilePath(QStringLiteral("navdb.sqlite"));
-	if (QFileInfo::exists(localPath)) {
-		return localPath;
-	}
-
+	
+	// 1. Check common relative paths from build directory
 	QStringList probes{
-		QStringLiteral("navdb/navdb.sqlite"),
-		QStringLiteral("../navdb/navdb.sqlite"),
-		QStringLiteral("../Resources/navdb.sqlite")
+		QStringLiteral("navdb.sqlite"),
+		QStringLiteral("../navdb.sqlite"),
+		QStringLiteral("../../navdb.sqlite"),
+		QStringLiteral("../../../navdb.sqlite")
 	};
 
 	for (const auto &probe : probes) {
@@ -342,11 +341,24 @@ QString UserManager::resolveDatabasePath() const {
 		}
 	}
 
+	// 2. Walk up the directory tree to find the project root
 	QDir walker(appDir);
 	for (int depth = 0; depth < 5 && walker.cdUp(); ++depth) {
-		const QString candidate = walker.absoluteFilePath(QStringLiteral("navdb/navdb.sqlite"));
-		if (QFileInfo::exists(candidate)) {
-			return candidate;
+		// If we find the project folder "IHM_PER_QT", use the DB inside it
+		if (walker.exists(QStringLiteral("IHM_PER_QT"))) {
+			return walker.absoluteFilePath(QStringLiteral("IHM_PER_QT/navdb.sqlite"));
+		}
+
+		// Also check if we are already IN the project folder (or parent) and the DB is here
+		QStringList candidates = {
+			QStringLiteral("navdb.sqlite"),
+			QStringLiteral("navdb/navdb.sqlite")
+		};
+		for (const auto &fname : candidates) {
+			const QString candidate = walker.absoluteFilePath(fname);
+			if (QFileInfo::exists(candidate)) {
+				return candidate;
+			}
 		}
 	}
 

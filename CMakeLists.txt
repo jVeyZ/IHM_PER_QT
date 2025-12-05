@@ -63,12 +63,4 @@ target_link_libraries(ProyectoPER PRIVATE
     Qt6::Sql
 )
 
-add_custom_command(TARGET ProyectoPER POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/../navdb.sqlite
-        $<TARGET_FILE_DIR:ProyectoPER>/navdb.sqlite)
-
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../navdb.sqlite
-        DESTINATION ${CMAKE_INSTALL_BINDIR})
-
 install(TARGETS ProyectoPER)

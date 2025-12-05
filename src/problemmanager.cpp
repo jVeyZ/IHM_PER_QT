@@ -22,7 +22,8 @@ bool ProblemManager::load() {
     QStringList probes{
         QStringLiteral("navdb.sqlite"),
         QStringLiteral("../navdb.sqlite"),
-        QStringLiteral("../Resources/navdb.sqlite")
+        QStringLiteral("../../navdb.sqlite"),
+        QStringLiteral("../../../navdb.sqlite")
     };
     
     for (const auto &probe : probes) {
@@ -36,11 +37,24 @@ bool ProblemManager::load() {
     if (dbPath.isEmpty()) {
         QDir walker(appDir);
         for (int depth = 0; depth < 5 && walker.cdUp(); ++depth) {
-            const QString candidate = walker.absoluteFilePath(QStringLiteral("navdb.sqlite"));
-            if (QFileInfo::exists(candidate)) {
-                dbPath = candidate;
+            // If we find the project folder "IHM_PER_QT", use the DB inside it
+            if (walker.exists(QStringLiteral("IHM_PER_QT"))) {
+                dbPath = walker.absoluteFilePath(QStringLiteral("IHM_PER_QT/navdb.sqlite"));
                 break;
             }
+
+            QStringList candidates = {
+                QStringLiteral("navdb.sqlite"),
+                QStringLiteral("IHM_PER_QT/navdb.sqlite")
+            };
+            for (const auto &fname : candidates) {
+                const QString candidate = walker.absoluteFilePath(fname);
+                if (QFileInfo::exists(candidate)) {
+                    dbPath = candidate;
+                    break;
+                }
+            }
+            if (!dbPath.isEmpty()) break;
         }
     }
 
