@@ -25,6 +25,8 @@
         <file alias="resources/images/icon_theme.svg">images/icon_theme.svg</file>
         <file alias="resources/images/icon_chevron_down_light.svg">images/icon_chevron_down_light.svg</file>
         <file alias="resources/images/icon_chevron_down_dark.svg">images/icon_chevron_down_dark.svg</file>
+        <file alias="resources/images/icon_chevron_left.svg">images/icon_chevron_left.svg</file>
+        <file alias="resources/images/icon_chevron_right.svg">images/icon_chevron_right.svg</file>
         <file alias="styles/modern_light.qss">../styles/modern_light.qss</file>
         <file alias="styles/lightblue.qss">../styles/lightblue.qss</file>
     </qresource>

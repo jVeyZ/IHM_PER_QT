@@ -2104,8 +2104,8 @@ QWidget *MainWindow::createAppPage() {
     prevProblemButton_->setObjectName("PrevProblemButton");
     prevProblemButton_->setFlat(false);
     prevProblemButton_->setText(QString());
-    prevProblemButton_->setIcon(style()->standardIcon(QStyle::SP_ArrowBack));
-    prevProblemButton_->setIconSize(QSize(20, 20));
+    prevProblemButton_->setIcon(QIcon(":/resources/images/icon_chevron_left.svg"));
+    prevProblemButton_->setIconSize(QSize(28, 28));
     prevProblemButton_->setToolTip(tr("Pregunta anterior"));
     prevProblemButton_->setFixedSize(kNavigationButtonSize, kNavigationButtonSize);
 
@@ -2116,8 +2116,8 @@ QWidget *MainWindow::createAppPage() {
     nextProblemButton_->setObjectName("NextProblemButton");
     nextProblemButton_->setFlat(false);
     nextProblemButton_->setText(QString());
-    nextProblemButton_->setIcon(style()->standardIcon(QStyle::SP_ArrowForward));
-    nextProblemButton_->setIconSize(QSize(20, 20));
+    nextProblemButton_->setIcon(QIcon(":/resources/images/icon_chevron_right.svg"));
+    nextProblemButton_->setIconSize(QSize(28, 28));
     nextProblemButton_->setToolTip(tr("Pregunta siguiente"));
     nextProblemButton_->setFixedSize(kNavigationButtonSize, kNavigationButtonSize);
 
@@ -2382,6 +2382,7 @@ QWidget *MainWindow::createToolStrip(QWidget *parent) {
     layout->setContentsMargins(18, 12, 18, 12);
     layout->setSpacing(10);
 
+    layout->addStretch(1);
     buildToolButtons(strip);
     layout->addStretch(1);
     return strip;
@@ -2580,7 +2581,8 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
 
     populateProblems();
     if (problemCombo_ && problemCombo_->count() > 0) {
-        loadRandomProblem();
+        problemCombo_->setCurrentIndex(0);
+        loadProblemFromSelection(0);
     } else {
         problemStatement_->setPlainText(tr("No se han encontrado problemas."));
     }
