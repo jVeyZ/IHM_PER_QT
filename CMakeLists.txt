@@ -27,6 +27,8 @@ set(PROJECT_SOURCES
     src/protractoritem.cpp
     src/ruleritem.cpp
     src/distanceitem.cpp
+    src/navigation.cpp
+    src/navigationdao.cpp
 )
 
 set(PROJECT_HEADERS
@@ -56,7 +58,6 @@ target_include_directories(ProyectoPER PRIVATE
 target_precompile_headers(ProyectoPER PRIVATE <cstdio>)
 
 target_link_libraries(ProyectoPER PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/libnavlib.a
     Qt6::Widgets
     Qt6::Gui
     Qt6::Svg
