@@ -100,9 +100,15 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override {
-        QWidget::paintEvent(event);
+        Q_UNUSED(event)
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
+
+        // Draw rounded background
+        QPainterPath bgPath;
+        bgPath.addRoundedRect(rect(), 12, 12);
+        painter.fillPath(bgPath, QColor(0xf6, 0xf8, 0xfa));
+        painter.setClipPath(bgPath);
 
         const QRectF canvas = rect().adjusted(32, 16, -48, -48);
 
@@ -189,9 +195,15 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override {
-        QWidget::paintEvent(event);
+        Q_UNUSED(event)
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
+
+        // Draw rounded background
+        QPainterPath bgPath;
+        bgPath.addRoundedRect(rect(), 12, 12);
+        painter.fillPath(bgPath, QColor(0xf6, 0xf8, 0xfa));
+        painter.setClipPath(bgPath);
 
         const QRectF paddedRect = rect().adjusted(32, 24, -32, -24);
         if (paddedRect.width() <= 0 || paddedRect.height() <= 0) {

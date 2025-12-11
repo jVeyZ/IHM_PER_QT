@@ -1766,9 +1766,15 @@
                   <widget class="QWidget" name="statsTrendHost" native="true">
                    <property name="minimumSize">
                     <size>
-                     <width>0</width>
+                     <width>200</width>
                      <height>220</height>
                     </size>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>1</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
                   </widget>
                  </item>
@@ -1776,9 +1782,15 @@
                   <widget class="QWidget" name="statsPieHost" native="true">
                    <property name="minimumSize">
                     <size>
-                     <width>0</width>
+                     <width>280</width>
                      <height>220</height>
                     </size>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>1</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
                   </widget>
                  </item>
