@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
 find_package(Qt6 6.5 COMPONENTS Widgets Gui Svg Sql REQUIRED)
 
@@ -29,6 +30,7 @@ set(PROJECT_SOURCES
     src/distanceitem.cpp
     src/navigation.cpp
     src/navigationdao.cpp
+    ui/mainwindow.ui
 )
 
 set(PROJECT_HEADERS

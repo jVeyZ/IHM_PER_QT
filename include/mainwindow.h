@@ -20,6 +20,10 @@
 #include "problemmanager.h"
 #include "usermanager.h"
 
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
 class QComboBox;
 class QTextEdit;
 class QPushButton;
@@ -86,18 +90,12 @@ private:
     struct HistorySessionSource;
 
     void setupUi();
-    QWidget *createLoginPage();
-    QWidget *createRegisterPage();
-    QWidget *createAppPage();
     QWidget *createToolStrip(QWidget *parent);
-    QWidget *createStatisticsPage(QWidget *parent);
     void buildToolButtons(QWidget *toolStrip);
     void updateToolStripLayout();
     void populateProblems();
     void enterApplication(const UserRecord &user, bool guestMode = false);
     void returnToLogin();
-    QWidget *buildLoginFormPage(QWidget *parent);
-    QWidget *buildRegisterFormPage(QWidget *parent);
     void updateUserPanel();
     void updateSessionLabels();
     void updateAnswerOptions();
@@ -126,6 +124,8 @@ private:
     void refreshHistorySessionOptions();
     void handleHistorySessionSelectionChanged(int index);
     const HistorySessionSource *selectedHistorySessionSource() const;
+
+    Ui::MainWindow *ui_ = nullptr;
 
     UserManager &userManager_;
     ProblemManager &problemManager_;
