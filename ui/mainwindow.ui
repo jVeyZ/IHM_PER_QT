@@ -185,7 +185,7 @@
               <string>Contraseña</string>
              </property>
              <property name="clearButtonEnabled">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -627,7 +627,7 @@
               <string>Contraseña</string>
              </property>
              <property name="clearButtonEnabled">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -640,7 +640,7 @@
               <string>Confirmar contraseña</string>
              </property>
              <property name="clearButtonEnabled">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
             </widget>
            </item>

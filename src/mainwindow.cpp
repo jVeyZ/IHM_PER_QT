@@ -1335,13 +1335,21 @@ void MainWindow::logout() {
 
 void MainWindow::toggleProtractor(bool checked) {
     if (chartScene_) {
-        chartScene_->setProtractorVisible(checked);
+        QPointF viewportCenter;
+        if (chartView_ && checked) {
+            viewportCenter = chartView_->mapToScene(chartView_->viewport()->rect().center());
+        }
+        chartScene_->setProtractorVisible(checked, viewportCenter);
     }
 }
 
 void MainWindow::toggleRuler(bool checked) {
     if (chartScene_) {
-        chartScene_->setRulerVisible(checked);
+        QPointF viewportCenter;
+        if (chartView_ && checked) {
+            viewportCenter = chartView_->mapToScene(chartView_->viewport()->rect().center());
+        }
+        chartScene_->setRulerVisible(checked, viewportCenter);
     }
 }
 
@@ -1482,6 +1490,19 @@ void MainWindow::setupUi() {
     // Login page widgets
     loginUserEdit_ = ui_->loginUserEdit;
     loginPasswordEdit_ = ui_->loginPasswordEdit;
+    
+    // Add eye toggle for login password
+    auto *loginPasswordToggle = loginPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    loginPasswordToggle->setCheckable(true);
+    connect(loginPasswordToggle, &QAction::toggled, this, [this, loginPasswordToggle](bool checked) {
+        loginPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        loginPasswordToggle->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+    
     loginButton_ = ui_->loginButton;
     guestLoginButton_ = ui_->guestLoginButton;
     loginFeedbackLabel_ = ui_->loginFeedbackLabel;
@@ -1492,6 +1513,31 @@ void MainWindow::setupUi() {
     registerEmailEdit_ = ui_->registerEmailEdit;
     registerPasswordEdit_ = ui_->registerPasswordEdit;
     registerConfirmPasswordEdit_ = ui_->registerConfirmPasswordEdit;
+    
+    // Add eye toggle for register password
+    auto *registerPasswordToggle = registerPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    registerPasswordToggle->setCheckable(true);
+    connect(registerPasswordToggle, &QAction::toggled, this, [this, registerPasswordToggle](bool checked) {
+        registerPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        registerPasswordToggle->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+    
+    // Add eye toggle for register confirm password
+    auto *registerConfirmPasswordToggle = registerConfirmPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    registerConfirmPasswordToggle->setCheckable(true);
+    connect(registerConfirmPasswordToggle, &QAction::toggled, this, [this, registerConfirmPasswordToggle](bool checked) {
+        registerConfirmPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        registerConfirmPasswordToggle->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+    
     registerBirthdateEdit_ = ui_->registerBirthdateEdit;
     registerBirthdateEdit_->setDate(QDate::currentDate().addYears(-18));
     registerAvatarPreview_ = ui_->registerAvatarPreview;
@@ -2068,7 +2114,7 @@ void MainWindow::updateToolStripLayout() {
     const QMargins margins = compact ? QMargins(12, 10, 12, 10) : QMargins(18, 12, 18, 12);
     layout->setContentsMargins(margins);
     layout->setSpacing(compact ? 8 : 12);
-    layout->setAlignment(compact ? (Qt::AlignLeft | Qt::AlignVCenter) : (Qt::AlignHCenter | Qt::AlignVCenter));
+    layout->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
     const QSize iconSize = compact ? QSize(24, 24) : QSize(28, 28);
 

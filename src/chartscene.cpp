@@ -120,21 +120,30 @@ void ChartScene::setBackgroundPixmap(const QPixmap &pixmap) {
     }
 }
 
-void ChartScene::setProtractorVisible(bool visible) {
+void ChartScene::setProtractorVisible(bool visible, const QPointF &viewportCenter) {
     if (protractor_) {
         protractor_->setVisible(visible);
         if (visible) {
-            protractor_->setPos(sceneRect().center());
+            if (!viewportCenter.isNull()) {
+                protractor_->setPos(viewportCenter);
+            } else {
+                protractor_->setPos(sceneRect().center());
+            }
+            protractor_->setRotation(0.0);
         }
     }
 }
 
-void ChartScene::setRulerVisible(bool visible) {
+void ChartScene::setRulerVisible(bool visible, const QPointF &viewportCenter) {
     if (ruler_) {
         ruler_->setVisible(visible);
         if (visible) {
             ruler_->resetState();
-            ruler_->setPos(sceneRect().center() + QPointF(0.0, 180.0));
+            if (!viewportCenter.isNull()) {
+                ruler_->setPos(viewportCenter);
+            } else {
+                ruler_->setPos(sceneRect().center() + QPointF(0.0, 180.0));
+            }
         }
     }
 }

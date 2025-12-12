@@ -42,8 +42,8 @@ public:
 
     void setBackgroundPixmap(const QPixmap &pixmap);
 
-    void setProtractorVisible(bool visible);
-    void setRulerVisible(bool visible);
+    void setProtractorVisible(bool visible, const QPointF &viewportCenter = QPointF());
+    void setRulerVisible(bool visible, const QPointF &viewportCenter = QPointF());
 
     void placeText(const QPointF &scenePos, const QString &text);
     void toggleExtremesForSelection();

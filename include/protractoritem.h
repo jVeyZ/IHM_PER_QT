@@ -7,7 +7,8 @@
 class QPainter;
 class QStyleOptionGraphicsItem;
 class QWidget;
-#include <memory>
+class QGraphicsSceneMouseEvent;
+class QGraphicsSceneHoverEvent;
 
 class QSvgRenderer;
 
@@ -22,10 +23,23 @@ public:
     void setRadius(double radius);
     double radius() const;
 
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
 private:
     double radius_ = 200.0;
     double minRadius_ = 120.0;
     double maxRadius_ = 400.0;
-    double svgAspectRatio_ = 0.5;
+    double svgAspectRatio_ = 1.0;
     std::unique_ptr<QSvgRenderer> svgRenderer_;
+    
+    // Rotation state
+    bool rotating_ = false;
+    double startRotation_ = 0.0;
+    double startAngle_ = 0.0;
+    QPointF rotationCenterScene_;
 };

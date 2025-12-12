@@ -13,6 +13,7 @@
         <file alias="resources/images/icon_select.svg">images/icon_select.svg</file>
         <file alias="resources/images/icon_crosshair.svg">images/icon_crosshair.svg</file>
         <file alias="resources/images/icon_protractor.svg">images/icon_protractor.svg</file>
+        <file alias="resources/images/transportador.svg">images/transportador.svg</file>
         <file alias="resources/images/icon_ruler.svg">images/icon_ruler.svg</file>
         <file alias="resources/images/icon_extremes.svg">images/icon_extremes.svg</file>
         <file alias="resources/images/icon_zoom_in.svg">images/icon_zoom_in.svg</file>
@@ -27,6 +28,8 @@
         <file alias="resources/images/icon_chevron_down_dark.svg">images/icon_chevron_down_dark.svg</file>
         <file alias="resources/images/icon_chevron_left.svg">images/icon_chevron_left.svg</file>
         <file alias="resources/images/icon_chevron_right.svg">images/icon_chevron_right.svg</file>
+        <file alias="resources/images/icon_eye_open.svg">images/icon_eye_open.svg</file>
+        <file alias="resources/images/icon_eye_closed.svg">images/icon_eye_closed.svg</file>
         <file alias="styles/modern_light.qss">../styles/modern_light.qss</file>
         <file alias="styles/lightblue.qss">../styles/lightblue.qss</file>
     </qresource>

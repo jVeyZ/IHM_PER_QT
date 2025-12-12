@@ -8,6 +8,7 @@
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QAction>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -62,6 +63,18 @@ void LoginDialog::setupUi() {
     passwordEdit_ = new QLineEdit();
     passwordEdit_->setPlaceholderText(tr("Contraseña"));
     passwordEdit_->setEchoMode(QLineEdit::Password);
+    passwordEdit_->setClearButtonEnabled(false);
+    
+    togglePasswordAction_ = passwordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    togglePasswordAction_->setCheckable(true);
+    connect(togglePasswordAction_, &QAction::toggled, this, [this](bool checked) {
+        passwordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        togglePasswordAction_->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
 
     form->addRow(tr("Usuario"), nicknameEdit_);
     form->addRow(tr("Contraseña"), passwordEdit_);
