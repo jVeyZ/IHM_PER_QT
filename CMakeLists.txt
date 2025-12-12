@@ -55,6 +55,8 @@ qt_add_executable(ProyectoPER
 
 target_include_directories(ProyectoPER PRIVATE
     include
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/ProyectoPER_autogen/include
 )
 
 target_precompile_headers(ProyectoPER PRIVATE <cstdio>)
