@@ -5,8 +5,6 @@ TARGET = ProyectoPER
 
 INCLUDEPATH += $$PWD/include
 
-LIBS += -L$$PWD/lib -lnavlib
-
 SOURCES += \
     src/main.cpp \
     src/mainwindow.cpp \
@@ -19,7 +17,9 @@ SOURCES += \
     src/chartview.cpp \
     src/protractoritem.cpp \
     src/ruleritem.cpp \
-    src/distanceitem.cpp
+    src/distanceitem.cpp \
+    src/navigation.cpp \
+    src/navigationdao.cpp
 
 HEADERS += \
     include/chartscene.h \
@@ -32,7 +32,12 @@ HEADERS += \
     include/protractoritem.h \
     include/ruleritem.h \
     include/distanceitem.h \
-    include/usermanager.h
+    include/usermanager.h \
+    include/navigation.h \
+    include/navigationdao.h
+
+FORMS += \
+    ui/mainwindow.ui
 
 RESOURCES += resources/app_resources.qrc
 
