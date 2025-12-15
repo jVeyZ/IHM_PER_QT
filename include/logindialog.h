@@ -11,6 +11,7 @@
 class QLineEdit;
 class QPushButton;
 class QLabel;
+class QAction;
 
 class LoginDialog : public QDialog {
     Q_OBJECT
@@ -33,6 +34,7 @@ private:
     UserManager &userManager_;
     QLineEdit *nicknameEdit_ = nullptr;
     QLineEdit *passwordEdit_ = nullptr;
+    QAction *togglePasswordAction_ = nullptr;
     QPushButton *loginButton_ = nullptr;
     QPushButton *registerButton_ = nullptr;
     QLabel *feedbackLabel_ = nullptr;

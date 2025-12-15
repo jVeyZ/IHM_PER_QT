@@ -20,6 +20,10 @@
 #include "problemmanager.h"
 #include "usermanager.h"
 
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
 class QComboBox;
 class QTextEdit;
 class QPushButton;
@@ -54,8 +58,8 @@ private slots:
     void loadProblemFromSelection(int index);
     void loadRandomProblem();
     void submitAnswer();
+    void showViewProfileDialog();
     void showProfileDialog();
-    void showResultsDialog();
     void logout();
     void toggleProtractor(bool checked);
     void toggleRuler(bool checked);
@@ -86,18 +90,12 @@ private:
     struct HistorySessionSource;
 
     void setupUi();
-    QWidget *createLoginPage();
-    QWidget *createRegisterPage();
-    QWidget *createAppPage();
     QWidget *createToolStrip(QWidget *parent);
-    QWidget *createStatisticsPage(QWidget *parent);
     void buildToolButtons(QWidget *toolStrip);
     void updateToolStripLayout();
     void populateProblems();
     void enterApplication(const UserRecord &user, bool guestMode = false);
     void returnToLogin();
-    QWidget *buildLoginFormPage(QWidget *parent);
-    QWidget *buildRegisterFormPage(QWidget *parent);
     void updateUserPanel();
     void updateSessionLabels();
     void updateAnswerOptions();
@@ -115,7 +113,7 @@ private:
     void applyProblemPaneConstraints(bool rememberWidth = true);
     int clampProblemPaneWidth(int totalWidth, int requestedWidth) const;
     void ensureProblemPaneVisible();
-    void setQuestionPanelMode(QuestionPanelMode mode);
+    void setQuestionPanelMode(QuestionPanelMode mode, bool syncHomeButtons = true);
     void showStatisticsView(bool active);
     void showStatusBanner(const QString &message, int timeoutMs = 0);
     void updateStatisticsPanel();
@@ -126,6 +124,8 @@ private:
     void refreshHistorySessionOptions();
     void handleHistorySessionSelectionChanged(int index);
     const HistorySessionSource *selectedHistorySessionSource() const;
+
+    Ui::MainWindow *ui_ = nullptr;
 
     UserManager &userManager_;
     ProblemManager &problemManager_;
@@ -160,9 +160,10 @@ private:
     QToolButton *questionsToggleButton_ = nullptr;
     QToolButton *statsButton_ = nullptr;
     QToolButton *statisticsButton_ = nullptr;
+    QButtonGroup *homeButtonGroup_ = nullptr;
     QMenu *userMenu_ = nullptr;
+    QAction *viewProfileAction_ = nullptr;
     QAction *profileAction_ = nullptr;
-    QAction *resultsAction_ = nullptr;
     QAction *logoutAction_ = nullptr;
     QAction *handAction_ = nullptr;
 
@@ -201,6 +202,9 @@ private:
     QVector<QRadioButton *> answerOptions_;
     QPushButton *submitButton_ = nullptr;
     QToolButton *collapseProblemButton_ = nullptr;
+    QToolButton *headerQuestionsButton_ = nullptr;
+    QToolButton *headerHistoryButton_ = nullptr;
+    QButtonGroup *headerButtonGroup_ = nullptr;
     QWidget *problemBody_ = nullptr;
     QPushButton *prevProblemButton_ = nullptr;
     QPushButton *nextProblemButton_ = nullptr;

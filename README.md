@@ -33,12 +33,12 @@ En macOS y Linux se creará el ejecutable `ProyectoPER`. En Windows se generará
 
 ## Estructura de datos
 
-- `data/users.json`: almacena usuarios, contraseñas con hash y sesiones realizadas.
-- `data/problems.json`: catálogo de problemas con respuestas tipo test.
-- `data/avatars/`: contiene los avatares personalizados copiados por la aplicación.
+- `navdb.sqlite`: base de datos SQLite gestionada por las librerías navdb. Colócala junto al fichero de proyecto (`CMakeLists.txt` / `ProyectoPER.pro`). La aplicación copiará este archivo junto al ejecutable durante la compilación/instalación.
+- `question_history` (tabla dentro de `navdb.sqlite`): almacena el detalle de cada intento (pregunta, opciones seleccionadas, respuestas correctas) para reconstruir el historial avanzado.
+- `data/avatars/`: directorio local donde se guardan los avatares exportados desde la base de datos o seleccionados por el usuario. El camino almacenado es relativo a esta carpeta.
 
 ## Personalización
 
-- Para añadir problemas basta con extender `data/problems.json` respetando el mismo esquema.
+- Para añadir o modificar problemas actualiza la tabla `problem` dentro de `navdb.sqlite` (puedes usar SQLite Browser o el script que prefieras). Tras los cambios no es necesario recompilar, basta con reiniciar la aplicación para que navegue con los nuevos datos.
 - Las imágenes de los instrumentos y la carta se encuentran en `resources/images/` y se empaquetan en el recurso Qt definido en `CMakeLists.txt`.
 - El estilo se ajusta en `styles/lightblue.qss`.

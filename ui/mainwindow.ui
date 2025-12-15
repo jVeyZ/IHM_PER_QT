@@ -1,0 +1,1989 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>820</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1024</width>
+    <height>720</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Proyecto PER</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="rootLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QStackedWidget" name="stack">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <!-- Login Page -->
+      <widget class="QWidget" name="loginPage">
+       <property name="objectName">
+        <string notr="true">LoginPage</string>
+       </property>
+       <layout class="QGridLayout" name="loginPageLayout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item row="0" column="1">
+         <spacer name="loginTopSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="0">
+         <spacer name="loginLeftSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="1">
+         <widget class="QFrame" name="loginCard">
+          <property name="objectName">
+           <string notr="true">LoginCard</string>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>340</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>380</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <layout class="QVBoxLayout" name="loginCardLayout">
+           <property name="spacing">
+            <number>8</number>
+           </property>
+           <property name="leftMargin">
+            <number>32</number>
+           </property>
+           <property name="topMargin">
+            <number>32</number>
+           </property>
+           <property name="rightMargin">
+            <number>32</number>
+           </property>
+           <property name="bottomMargin">
+            <number>32</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="loginTitle">
+             <property name="objectName">
+              <string notr="true">LoginTitle</string>
+             </property>
+             <property name="text">
+              <string>Bienvenido de nuevo</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="loginSubtitle">
+             <property name="objectName">
+              <string notr="true">LoginSubtitle</string>
+             </property>
+             <property name="text">
+              <string>Inicia sesión para continuar navegando por la carta.</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="loginFormSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>8</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="loginUserEdit">
+             <property name="placeholderText">
+              <string>Usuario</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="loginPasswordEdit">
+             <property name="echoMode">
+              <enum>QLineEdit::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string>Contraseña</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="loginFeedbackLabel">
+             <property name="objectName">
+              <string notr="true">LoginFeedback</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="loginButton">
+             <property name="objectName">
+              <string notr="true">LoginButton</string>
+             </property>
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Entrar</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="guestLoginButton">
+             <property name="objectName">
+              <string notr="true">GuestLoginButton</string>
+             </property>
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string>Acceso de Invitado</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="loginRegisterRow">
+             <property name="spacing">
+              <number>8</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="registerHint">
+               <property name="objectName">
+                <string notr="true">RegisterHint</string>
+               </property>
+               <property name="text">
+                <string>¿Aún no tienes cuenta?</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="registerButton">
+               <property name="objectName">
+                <string notr="true">RegisterButton</string>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>Crear cuenta</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="registerRowSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <spacer name="loginRightSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="1">
+         <spacer name="loginBottomSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <!-- Register Page -->
+      <widget class="QWidget" name="registerPage">
+       <property name="objectName">
+        <string notr="true">RegistrationPage</string>
+       </property>
+       <layout class="QGridLayout" name="registerPageLayout">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item row="0" column="1">
+         <spacer name="registerTopSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="0">
+         <spacer name="registerLeftSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="1">
+         <widget class="QFrame" name="registerCard">
+          <property name="objectName">
+           <string notr="true">RegisterCard</string>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>420</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>480</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <layout class="QVBoxLayout" name="registerCardLayout">
+           <property name="spacing">
+            <number>16</number>
+           </property>
+           <property name="leftMargin">
+            <number>36</number>
+           </property>
+           <property name="topMargin">
+            <number>32</number>
+           </property>
+           <property name="rightMargin">
+            <number>36</number>
+           </property>
+           <property name="bottomMargin">
+            <number>32</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="registerTitle">
+             <property name="objectName">
+              <string notr="true">RegisterTitle</string>
+             </property>
+             <property name="text">
+              <string>Crear cuenta</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="registerSubtitle">
+             <property name="objectName">
+              <string notr="true">RegisterSubtitle</string>
+             </property>
+             <property name="text">
+              <string>Configura tu cuenta para comenzar a practicar.</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="registerHeaderSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>8</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="avatarSection">
+             <property name="spacing">
+              <number>16</number>
+             </property>
+             <item>
+              <spacer name="avatarLeftSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="registerAvatarPreview">
+               <property name="objectName">
+                <string notr="true">AvatarPreview</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>80</width>
+                 <height>80</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>80</width>
+                 <height>80</height>
+                </size>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="scaledContents">
+                <bool>true</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="avatarButton">
+               <property name="objectName">
+                <string notr="true">AvatarButton</string>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Cambiar foto</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="avatarRightSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="avatarFormSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>8</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="birthdateRow">
+             <property name="spacing">
+              <number>10</number>
+             </property>
+             <item>
+              <spacer name="birthdateLeftSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="registerBirthdateLabel">
+               <property name="text">
+                <string>Fecha de nacimiento</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDateEdit" name="registerBirthdateEdit">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="calendarPopup">
+                <bool>true</bool>
+               </property>
+               <property name="displayFormat">
+                <string>dd/MM/yyyy</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="birthdateRightSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="birthdateFormSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>8</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="registerNicknameEdit">
+             <property name="placeholderText">
+              <string>Usuario (6-15 caracteres)</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="registerEmailEdit">
+             <property name="placeholderText">
+              <string>Correo electrónico</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="registerPasswordEdit">
+             <property name="echoMode">
+              <enum>QLineEdit::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string>Contraseña</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="registerConfirmPasswordEdit">
+             <property name="echoMode">
+              <enum>QLineEdit::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string>Confirmar contraseña</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="registerFeedbackLabel">
+             <property name="objectName">
+              <string notr="true">RegisterFeedback</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="registerSubmitButton">
+             <property name="objectName">
+              <string notr="true">RegisterSubmitButton</string>
+             </property>
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Crear cuenta</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="backToLoginRow">
+             <item>
+              <spacer name="backLeftSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="backToLoginHint">
+               <property name="text">
+                <string>¿Ya tienes cuenta?</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="backToLoginButton">
+               <property name="objectName">
+                <string notr="true">BackToLoginButton</string>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>Iniciar sesión</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="backRightSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <spacer name="registerRightSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="1">
+         <spacer name="registerBottomSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <!-- App Page -->
+      <widget class="QWidget" name="appPage">
+       <layout class="QVBoxLayout" name="appLayout">
+        <property name="spacing">
+         <number>16</number>
+        </property>
+        <property name="leftMargin">
+         <number>24</number>
+        </property>
+        <property name="topMargin">
+         <number>24</number>
+        </property>
+        <property name="rightMargin">
+         <number>24</number>
+        </property>
+        <property name="bottomMargin">
+         <number>24</number>
+        </property>
+        <item>
+         <widget class="QFrame" name="topBar">
+          <property name="objectName">
+           <string notr="true">TopBar</string>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <layout class="QHBoxLayout" name="topBarLayout">
+           <property name="spacing">
+            <number>8</number>
+           </property>
+           <property name="leftMargin">
+            <number>24</number>
+           </property>
+           <property name="topMargin">
+            <number>16</number>
+           </property>
+           <property name="rightMargin">
+            <number>24</number>
+           </property>
+           <property name="bottomMargin">
+            <number>16</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="appTitle">
+             <property name="objectName">
+              <string notr="true">AppTitle</string>
+             </property>
+             <property name="text">
+              <string>Proyecto PER</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="topBarSpacer1">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>12</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="userSummaryLabel">
+             <property name="objectName">
+              <string notr="true">UserSummary</string>
+             </property>
+             <property name="text">
+              <string></string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="statsButton">
+             <property name="objectName">
+              <string notr="true">StatsButton</string>
+             </property>
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Mapa</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
+             </property>
+             <property name="toolButtonStyle">
+              <enum>Qt::ToolButtonTextOnly</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="questionsToggleButton">
+             <property name="objectName">
+              <string notr="true">QuestionsToggleButton</string>
+             </property>
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Preguntas</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
+             </property>
+             <property name="toolButtonStyle">
+              <enum>Qt::ToolButtonTextOnly</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="historyStatsSeparator">
+             <property name="objectName">
+              <string notr="true">HistoryStatsSeparator</string>
+             </property>
+             <property name="text">
+              <string>|</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6e7781;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="statisticsButton">
+             <property name="objectName">
+              <string notr="true">StatisticsButton</string>
+             </property>
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Estadísticas</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
+             </property>
+             <property name="toolButtonStyle">
+              <enum>Qt::ToolButtonTextOnly</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="topBarStretch">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="sessionStatsLabel">
+             <property name="objectName">
+              <string notr="true">SessionStats</string>
+             </property>
+             <property name="text">
+              <string>Aciertos: 0 · Fallos: 0</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="statusMessageLabel">
+             <property name="objectName">
+              <string notr="true">StatusMessageLabel</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6e7781;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="userMenuButton">
+             <property name="objectName">
+              <string notr="true">UserButton</string>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
+             </property>
+             <property name="popupMode">
+              <enum>QToolButton::InstantPopup</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="contentStack">
+          <property name="objectName">
+           <string notr="true">ContentStack</string>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <!-- Content Splitter Page -->
+          <widget class="QWidget" name="contentSplitterPage">
+           <layout class="QVBoxLayout" name="contentSplitterPageLayout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QSplitter" name="contentSplitter">
+              <property name="objectName">
+               <string notr="true">ContentSplitter</string>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="handleWidth">
+               <number>12</number>
+              </property>
+              <property name="childrenCollapsible">
+               <bool>false</bool>
+              </property>
+              <!-- Chart Card -->
+              <widget class="QFrame" name="chartCard">
+               <property name="objectName">
+                <string notr="true">ChartCard</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>520</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <layout class="QVBoxLayout" name="chartCardLayout">
+                <property name="spacing">
+                 <number>12</number>
+                </property>
+                <property name="leftMargin">
+                 <number>16</number>
+                </property>
+                <property name="topMargin">
+                 <number>16</number>
+                </property>
+                <property name="rightMargin">
+                 <number>16</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>16</number>
+                </property>
+                <item>
+                 <widget class="QFrame" name="toolStrip">
+                  <property name="objectName">
+                   <string notr="true">ToolStrip</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="toolStripLayout">
+                   <property name="spacing">
+                    <number>10</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>18</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>12</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>18</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>12</number>
+                   </property>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="ChartView" name="chartView">
+                  <property name="frameShape">
+                   <enum>QFrame::NoFrame</enum>
+                  </property>
+                  <property name="horizontalScrollBarPolicy">
+                   <enum>Qt::ScrollBarAlwaysOff</enum>
+                  </property>
+                  <property name="verticalScrollBarPolicy">
+                   <enum>Qt::ScrollBarAlwaysOff</enum>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <!-- Problem Card -->
+              <widget class="QFrame" name="problemCard">
+               <property name="objectName">
+                <string notr="true">ProblemCard</string>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>360</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <layout class="QVBoxLayout" name="problemCardLayout">
+                <property name="spacing">
+                 <number>12</number>
+                </property>
+                <property name="leftMargin">
+                 <number>16</number>
+                </property>
+                <property name="topMargin">
+                 <number>16</number>
+                </property>
+                <property name="rightMargin">
+                 <number>16</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>16</number>
+                </property>
+                <item>
+                 <layout class="QHBoxLayout" name="problemHeaderLayout">
+                  <property name="spacing">
+                   <number>8</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="problemTitleLayout">
+                    <item>
+                     <widget class="QToolButton" name="headerQuestionsButton">
+                      <property name="objectName">
+                       <string notr="true">HeaderQuestionsButton</string>
+                      </property>
+                      <property name="text">
+                       <string>Preguntas</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoRaise">
+                       <bool>true</bool>
+                      </property>
+                      <property name="toolButtonStyle">
+                       <enum>Qt::ToolButtonTextOnly</enum>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="headerSeparator">
+                      <property name="objectName">
+                       <string notr="true">HeaderSeparator</string>
+                      </property>
+                      <property name="text">
+                       <string>|</string>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">color: #6e7781;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="headerHistoryButton">
+                      <property name="objectName">
+                       <string notr="true">HeaderHistoryButton</string>
+                      </property>
+                      <property name="text">
+                       <string>Histórico</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoRaise">
+                       <bool>true</bool>
+                      </property>
+                      <property name="toolButtonStyle">
+                       <enum>Qt::ToolButtonTextOnly</enum>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <spacer name="problemHeaderSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QToolButton" name="collapseProblemButton">
+                    <property name="objectName">
+                     <string notr="true">ProblemCollapseButton</string>
+                    </property>
+                    <property name="toolTip">
+                     <string>Ocultar panel</string>
+                    </property>
+                    <property name="checkable">
+                     <bool>true</bool>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                    <property name="autoRaise">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QWidget" name="problemBody" native="true">
+                  <layout class="QVBoxLayout" name="problemBodyLayout">
+                   <property name="spacing">
+                    <number>10</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QWidget" name="navigationRow" native="true">
+                     <property name="objectName">
+                      <string notr="true">ProblemNavigationRow</string>
+                     </property>
+                     <layout class="QHBoxLayout" name="navigationRowLayout">
+                      <property name="spacing">
+                       <number>8</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QComboBox" name="problemCombo">
+                        <property name="objectName">
+                         <string notr="true">ProblemSelector</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="randomButton">
+                        <property name="objectName">
+                         <string notr="true">RandomButton</string>
+                        </property>
+                        <property name="text">
+                         <string>Aleatorio</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QWidget" name="historyControlsRow" native="true">
+                     <property name="objectName">
+                      <string notr="true">HistoryControlsRow</string>
+                     </property>
+                     <layout class="QHBoxLayout" name="historyControlsLayout">
+                      <property name="spacing">
+                       <number>8</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QLabel" name="historySessionLabel">
+                        <property name="text">
+                         <string>Sesión</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QComboBox" name="historySessionCombo">
+                        <property name="objectName">
+                         <string notr="true">HistorySessionCombo</string>
+                        </property>
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <spacer name="historyControlsSpacer">
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>40</width>
+                          <height>20</height>
+                         </size>
+                        </property>
+                       </spacer>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="historyStatusLabel">
+                     <property name="objectName">
+                      <string notr="true">HistoryStatusLabel</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="wordWrap">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QFrame" name="questionSection">
+                     <property name="objectName">
+                      <string notr="true">QuestionSection</string>
+                     </property>
+                     <layout class="QVBoxLayout" name="questionSectionLayout">
+                      <property name="spacing">
+                       <number>12</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>12</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>12</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>12</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>12</number>
+                      </property>
+                      <item>
+                       <widget class="QTextEdit" name="problemStatement">
+                        <property name="objectName">
+                         <string notr="true">ProblemStatement</string>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>120</height>
+                         </size>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="readOnly">
+                         <bool>true</bool>
+                        </property>
+                        <property name="horizontalScrollBarPolicy">
+                         <enum>Qt::ScrollBarAlwaysOff</enum>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="questionSeparator">
+                        <property name="objectName">
+                         <string notr="true">QuestionSeparator</string>
+                        </property>
+                        <property name="text">
+                         <string>__</string>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color: #6e7781; padding-left: 8px;</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QRadioButton" name="answerOption_0">
+                        <property name="objectName">
+                         <string notr="true">AnswerOption_0</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QRadioButton" name="answerOption_1">
+                        <property name="objectName">
+                         <string notr="true">AnswerOption_1</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QRadioButton" name="answerOption_2">
+                        <property name="objectName">
+                         <string notr="true">AnswerOption_2</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QRadioButton" name="answerOption_3">
+                        <property name="objectName">
+                         <string notr="true">AnswerOption_3</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <spacer name="questionSectionStretch">
+                        <property name="orientation">
+                         <enum>Qt::Vertical</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>20</width>
+                          <height>40</height>
+                         </size>
+                        </property>
+                       </spacer>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="problemBodyStretch">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="actionLayout">
+                     <property name="spacing">
+                      <number>8</number>
+                     </property>
+                     <item>
+                      <widget class="QPushButton" name="prevProblemButton">
+                       <property name="objectName">
+                        <string notr="true">PrevProblemButton</string>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>46</width>
+                         <height>46</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>46</width>
+                         <height>46</height>
+                        </size>
+                       </property>
+                       <property name="toolTip">
+                        <string>Pregunta anterior</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="flat">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="submitButton">
+                       <property name="objectName">
+                        <string notr="true">SubmitButton</string>
+                       </property>
+                       <property name="enabled">
+                        <bool>false</bool>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>46</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>46</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>Comprobar respuesta</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="nextProblemButton">
+                       <property name="objectName">
+                        <string notr="true">NextProblemButton</string>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>46</width>
+                         <height>46</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>46</width>
+                         <height>46</height>
+                        </size>
+                       </property>
+                       <property name="toolTip">
+                        <string>Pregunta siguiente</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="flat">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <!-- Statistics Page -->
+          <widget class="QWidget" name="statisticsPage">
+           <property name="objectName">
+            <string notr="true">StatisticsPage</string>
+           </property>
+           <layout class="QVBoxLayout" name="statisticsLayout">
+            <property name="spacing">
+             <number>14</number>
+            </property>
+            <property name="leftMargin">
+             <number>24</number>
+            </property>
+            <property name="topMargin">
+             <number>24</number>
+            </property>
+            <property name="rightMargin">
+             <number>24</number>
+            </property>
+            <property name="bottomMargin">
+             <number>24</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="statisticsTitle">
+              <property name="objectName">
+               <string notr="true">StatisticsTitle</string>
+              </property>
+              <property name="text">
+               <string>Panel de estadísticas</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="statsSummaryCard">
+              <property name="objectName">
+               <string notr="true">StatsSummaryCard</string>
+              </property>
+              <layout class="QGridLayout" name="statsSummaryLayout">
+               <property name="leftMargin">
+                <number>24</number>
+               </property>
+               <property name="topMargin">
+                <number>20</number>
+               </property>
+               <property name="rightMargin">
+                <number>24</number>
+               </property>
+               <property name="bottomMargin">
+                <number>20</number>
+               </property>
+               <property name="spacing">
+                <number>18</number>
+               </property>
+               <item row="0" column="0">
+                <widget class="QWidget" name="statsTotalBlock" native="true">
+                 <property name="objectName">
+                  <string notr="true">StatsSummaryBlock</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="statsTotalBlockLayout">
+                  <property name="spacing">
+                   <number>4</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="statsTotalLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockLabel</string>
+                    </property>
+                    <property name="text">
+                     <string>Respondidas</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="statsTotalValueLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockValue</string>
+                    </property>
+                    <property name="text">
+                     <string>--</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QWidget" name="statsCorrectBlock" native="true">
+                 <property name="objectName">
+                  <string notr="true">StatsSummaryBlock</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="statsCorrectBlockLayout">
+                  <property name="spacing">
+                   <number>4</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="statsCorrectLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockLabel</string>
+                    </property>
+                    <property name="text">
+                     <string>Correctas</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="statsCorrectValueLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockValue</string>
+                    </property>
+                    <property name="text">
+                     <string>--</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QWidget" name="statsIncorrectBlock" native="true">
+                 <property name="objectName">
+                  <string notr="true">StatsSummaryBlock</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="statsIncorrectBlockLayout">
+                  <property name="spacing">
+                   <number>4</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="statsIncorrectLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockLabel</string>
+                    </property>
+                    <property name="text">
+                     <string>Incorrectas</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="statsIncorrectValueLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockValue</string>
+                    </property>
+                    <property name="text">
+                     <string>--</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QWidget" name="statsAccuracyBlock" native="true">
+                 <property name="objectName">
+                  <string notr="true">StatsSummaryBlock</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="statsAccuracyBlockLayout">
+                  <property name="spacing">
+                   <number>4</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="statsAccuracyLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockLabel</string>
+                    </property>
+                    <property name="text">
+                     <string>Precisión</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="statsAccuracyValueLabel">
+                    <property name="objectName">
+                     <string notr="true">StatsBlockValue</string>
+                    </property>
+                    <property name="text">
+                     <string>--</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="statsChartCard">
+              <property name="objectName">
+               <string notr="true">StatsChartCard</string>
+              </property>
+              <layout class="QVBoxLayout" name="statsChartCardLayout">
+               <property name="spacing">
+                <number>12</number>
+               </property>
+               <property name="leftMargin">
+                <number>24</number>
+               </property>
+               <property name="topMargin">
+                <number>20</number>
+               </property>
+               <property name="rightMargin">
+                <number>24</number>
+               </property>
+               <property name="bottomMargin">
+                <number>24</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="statsChartTitle">
+                 <property name="objectName">
+                  <string notr="true">StatsBlockLabel</string>
+                 </property>
+                 <property name="text">
+                  <string>Tendencia y distribución</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="statsChartContentLayout">
+                 <property name="spacing">
+                  <number>16</number>
+                 </property>
+                 <item>
+                  <widget class="QWidget" name="statsTrendHost" native="true">
+                   <property name="minimumSize">
+                    <size>
+                     <width>200</width>
+                     <height>220</height>
+                    </size>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>1</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QWidget" name="statsPieHost" native="true">
+                   <property name="minimumSize">
+                    <size>
+                     <width>280</width>
+                     <height>220</height>
+                    </size>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>1</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="statsTableCard">
+              <property name="objectName">
+               <string notr="true">StatsTableCard</string>
+              </property>
+              <layout class="QVBoxLayout" name="statsTableCardLayout">
+               <property name="spacing">
+                <number>12</number>
+               </property>
+               <property name="leftMargin">
+                <number>24</number>
+               </property>
+               <property name="topMargin">
+                <number>20</number>
+               </property>
+               <property name="rightMargin">
+                <number>24</number>
+               </property>
+               <property name="bottomMargin">
+                <number>24</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="statsTableTitle">
+                 <property name="objectName">
+                  <string notr="true">StatsBlockLabel</string>
+                 </property>
+                 <property name="text">
+                  <string>Sesiones recientes</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QTableWidget" name="statsSessionsTable">
+                 <property name="objectName">
+                  <string notr="true">StatsSessionsTable</string>
+                 </property>
+                 <property name="editTriggers">
+                  <set>QAbstractItemView::NoEditTriggers</set>
+                 </property>
+                 <property name="showGrid">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alternatingRowColors">
+                  <bool>true</bool>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::NoSelection</enum>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <column>
+                  <property name="text">
+                   <string>Fecha</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>Respondidas</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>Correctas</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>Incorrectas</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>Precisión</string>
+                  </property>
+                 </column>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QLabel" name="statsEmptyStateLabel">
+              <property name="text">
+               <string>Todavía no hay datos de práctica. Responde algunas preguntas para generar estadísticas.</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignHCenter|Qt::AlignTop</set>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>220</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ChartView</class>
+   <extends>QGraphicsView</extends>
+   <header>chartview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

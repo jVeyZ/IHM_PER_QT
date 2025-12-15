@@ -12,6 +12,7 @@ class QLineEdit;
 class QDateEdit;
 class QLabel;
 class QPushButton;
+class QAction;
 class RegisterDialog : public QDialog {
     Q_OBJECT
 public:
@@ -33,6 +34,8 @@ private:
     QLineEdit *emailEdit_ = nullptr;
     QLineEdit *passwordEdit_ = nullptr;
     QLineEdit *confirmPasswordEdit_ = nullptr;
+    QAction *togglePasswordAction_ = nullptr;
+    QAction *toggleConfirmPasswordAction_ = nullptr;
     QDateEdit *birthdateEdit_ = nullptr;
     QLabel *avatarPreview_ = nullptr;
     QLabel *feedbackLabel_ = nullptr;

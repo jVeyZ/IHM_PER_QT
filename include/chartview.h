@@ -5,6 +5,7 @@
 #include "chartscene.h"
 
 #include <QPoint>
+#include <QPainterPath>
 
 class ChartView : public QGraphicsView {
     Q_OBJECT
@@ -26,9 +27,11 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 
 private:
     void applyZoom(double factor, const QPointF &anchorScenePos);
+    void updateViewportMask();
 
     double zoomStep_ = 1.15;
     double minZoomFactor_ = 0.2;
@@ -37,4 +40,5 @@ private:
     bool handNavigationEnabled_ = false;
     bool panning_ = false;
     QPoint lastPanPoint_;
+    int borderRadius_ = 12;
 };

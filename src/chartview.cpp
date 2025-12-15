@@ -5,6 +5,9 @@
 #include <QMouseEvent>
 #include <QPoint>
 #include <QScrollBar>
+#include <QPainter>
+#include <QPainterPath>
+#include <QRegion>
 
 #include <QtGlobal>
 
@@ -16,6 +19,9 @@ ChartView::ChartView(QWidget *parent)
     setDragMode(QGraphicsView::NoDrag);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
+    setFrameShape(QFrame::NoFrame);
+    setStyleSheet(QStringLiteral("background-color: #f6f8fa;"));
+    viewport()->setStyleSheet(QStringLiteral("background-color: #f6f8fa;"));
 }
 
 void ChartView::setZoomStep(double factor) {
@@ -121,6 +127,28 @@ void ChartView::mouseReleaseEvent(QMouseEvent *event) {
 
 void ChartView::resizeEvent(QResizeEvent *event) {
     QGraphicsView::resizeEvent(event);
+    updateViewportMask();
+}
+
+void ChartView::paintEvent(QPaintEvent *event) {
+    QPainter painter(viewport());
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    // Draw rounded background
+    QPainterPath path;
+    path.addRoundedRect(viewport()->rect(), borderRadius_, borderRadius_);
+    painter.setClipPath(path);
+    painter.fillPath(path, QColor(0xf6, 0xf8, 0xfa));
+    
+    // Call base implementation for scene rendering
+    QGraphicsView::paintEvent(event);
+}
+
+void ChartView::updateViewportMask() {
+    QPainterPath path;
+    path.addRoundedRect(viewport()->rect(), borderRadius_, borderRadius_);
+    QRegion mask(path.toFillPolygon().toPolygon());
+    viewport()->setMask(mask);
 }
 
 void ChartView::applyZoom(double factor, const QPointF &anchorScenePos) {

@@ -13,7 +13,7 @@ class QPushButton;
 class ProfileDialog : public QDialog {
     Q_OBJECT
 public:
-    ProfileDialog(UserManager &manager, UserRecord user, QWidget *parent = nullptr);
+    ProfileDialog(UserManager &manager, UserRecord user, QWidget *parent = nullptr, bool readOnly = false);
 
     const UserRecord &updatedUser() const;
 
@@ -23,10 +23,12 @@ private slots:
 
 private:
     void setupUi();
+    void setupReadOnlyUi();
     bool validate(QString &errorMessage) const;
 
     UserManager &manager_;
     UserRecord user_;
+    bool readOnly_ = false;
 
     QLineEdit *nicknameEdit_ = nullptr;
     QLineEdit *emailEdit_ = nullptr;

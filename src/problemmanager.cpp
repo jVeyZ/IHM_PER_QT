@@ -1,55 +1,148 @@
 #include "problemmanager.h"
 
-#include <QFile>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QRandomGenerator>
+#include <utility>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDir>
+#include <QCoreApplication>
+#include <QFileInfo>
 
-ProblemManager::ProblemManager(QString storagePath, QObject *parent)
-    : QObject(parent), storagePath_(std::move(storagePath)) {}
+ProblemManager::ProblemManager(Navigation &navigation, QObject *parent)
+    : QObject(parent), navigation_(navigation) {}
 
 bool ProblemManager::load() {
     problems_.clear();
 
-    QFile file(storagePath_);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return false;
-    }
-
-    const auto doc = QJsonDocument::fromJson(file.readAll());
-    if (!doc.isObject()) {
-        return false;
-    }
-
-    const auto root = doc.object();
-    const auto array = root.value("problems").toArray();
-    problems_.reserve(array.size());
-
-    for (const auto &value : array) {
-        if (!value.isObject()) {
-            continue;
+    // Try to load from DB directly to handle "true"/"false" strings correctly
+    QString dbPath;
+    QDir appDir(QCoreApplication::applicationDirPath());
+    
+    QStringList probes{
+        QStringLiteral("navdb.sqlite"),
+        QStringLiteral("../navdb.sqlite"),
+        QStringLiteral("../../navdb.sqlite"),
+        QStringLiteral("../../../navdb.sqlite")
+    };
+    
+    for (const auto &probe : probes) {
+        const QString candidate = appDir.absoluteFilePath(probe);
+        if (QFileInfo::exists(candidate)) {
+            dbPath = candidate;
+            break;
         }
-        const auto obj = value.toObject();
-        ProblemEntry problem;
-        problem.id = obj.value("id").toInt(-1);
-        problem.category = obj.value("category").toString();
-        problem.text = obj.value("text").toString();
-
-        const auto answersArray = obj.value("answers").toArray();
-        for (const auto &answerValue : answersArray) {
-            if (!answerValue.isObject()) {
-                continue;
+    }
+    
+    if (dbPath.isEmpty()) {
+        QDir walker(appDir);
+        for (int depth = 0; depth < 5 && walker.cdUp(); ++depth) {
+            // If we find the project folder "IHM_PER_QT", use the DB inside it
+            if (walker.exists(QStringLiteral("IHM_PER_QT"))) {
+                dbPath = walker.absoluteFilePath(QStringLiteral("IHM_PER_QT/navdb.sqlite"));
+                break;
             }
-            const auto answerObj = answerValue.toObject();
-            AnswerOption answer;
-            answer.text = answerObj.value("text").toString();
-            answer.valid = answerObj.value("valid").toBool(false);
-            problem.answers.push_back(answer);
+
+            QStringList candidates = {
+                QStringLiteral("navdb.sqlite"),
+                QStringLiteral("IHM_PER_QT/navdb.sqlite")
+            };
+            for (const auto &fname : candidates) {
+                const QString candidate = walker.absoluteFilePath(fname);
+                if (QFileInfo::exists(candidate)) {
+                    dbPath = candidate;
+                    break;
+                }
+            }
+            if (!dbPath.isEmpty()) break;
+        }
+    }
+
+    if (!dbPath.isEmpty()) {
+        {
+            const QString connectionName = QStringLiteral("ProblemManagerConnection");
+            QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connectionName);
+            db.setDatabaseName(dbPath);
+            if (db.open()) {
+                QSqlQuery query(db);
+                if (query.exec(QStringLiteral("SELECT text, answer1, val1, answer2, val2, answer3, val3, answer4, val4 FROM problem"))) {
+                    int nextId = 1;
+                    const QString defaultCategory = tr("Banco navdb");
+                    
+                    while (query.next()) {
+                        ProblemEntry entry;
+                        entry.id = nextId++;
+                        entry.category = defaultCategory;
+                        entry.text = query.value(0).toString();
+                        
+                        for (int i = 1; i <= 7; i += 2) {
+                            QString ansText = query.value(i).toString();
+                            QString valText = query.value(i+1).toString();
+                            
+                            if (!ansText.isEmpty()) {
+                                AnswerOption option;
+                                option.text = ansText;
+                                // Handle "true"/"false" strings and integers
+                                const QString v = valText.trimmed();
+                                if (v.compare(QStringLiteral("true"), Qt::CaseInsensitive) == 0) {
+                                    option.valid = true;
+                                } else if (v.compare(QStringLiteral("false"), Qt::CaseInsensitive) == 0) {
+                                    option.valid = false;
+                                } else {
+                                    bool ok;
+                                    const int intVal = v.toInt(&ok);
+                                    if (ok) {
+                                        option.valid = (intVal != 0);
+                                    } else {
+                                        option.valid = false;
+                                    }
+                                }
+                                entry.answers.push_back(option);
+                            }
+                        }
+                        
+                        if (!entry.answers.isEmpty()) {
+                            problems_.push_back(std::move(entry));
+                        }
+                    }
+                }
+                db.close();
+            }
+        }
+        QSqlDatabase::removeDatabase(QStringLiteral("ProblemManagerConnection"));
+    }
+
+    if (!problems_.isEmpty()) {
+        emit problemsChanged();
+        return true;
+    }
+
+    // Fallback to Navigation if DB load failed
+    navigation_.reload();
+
+    const auto &navProblems = navigation_.problems();
+    problems_.reserve(navProblems.size());
+
+    int nextId = 1;
+    const QString defaultCategory = tr("Banco navdb");
+
+    for (const auto &navProblem : navProblems) {
+        ProblemEntry entry;
+        entry.id = nextId++;
+        entry.category = defaultCategory;
+        entry.text = navProblem.text();
+
+        const auto &answers = navProblem.answers();
+        entry.answers.reserve(answers.size());
+        for (const auto &answer : answers) {
+            AnswerOption option;
+            option.text = answer.text();
+            option.valid = answer.validity();
+            entry.answers.push_back(option);
         }
 
-        if (!problem.answers.isEmpty()) {
-            problems_.push_back(problem);
+        if (!entry.answers.isEmpty()) {
+            problems_.push_back(std::move(entry));
         }
     }
 

@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "ui_mainwindow.h"
 
 #include "profiledialog.h"
 #include "resultsdialog.h"
@@ -99,9 +100,15 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override {
-        QWidget::paintEvent(event);
+        Q_UNUSED(event)
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
+
+        // Draw rounded background
+        QPainterPath bgPath;
+        bgPath.addRoundedRect(rect(), 12, 12);
+        painter.fillPath(bgPath, QColor(0xf6, 0xf8, 0xfa));
+        painter.setClipPath(bgPath);
 
         const QRectF canvas = rect().adjusted(32, 16, -48, -48);
 
@@ -188,9 +195,15 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override {
-        QWidget::paintEvent(event);
+        Q_UNUSED(event)
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
+
+        // Draw rounded background
+        QPainterPath bgPath;
+        bgPath.addRoundedRect(rect(), 12, 12);
+        painter.fillPath(bgPath, QColor(0xf6, 0xf8, 0xfa));
+        painter.setClipPath(bgPath);
 
         const QRectF paddedRect = rect().adjusted(32, 24, -32, -24);
         if (paddedRect.width() <= 0 || paddedRect.height() <= 0) {
@@ -272,8 +285,8 @@ MainWindow::MainWindow(UserManager &userManager,
       userManager_(userManager),
       problemManager_(problemManager) {
     setWindowTitle(tr("Proyecto PER"));
-    resize(1200, 780);
-    setMinimumSize(1024, 680);
+    resize(1024, 820);
+    setMinimumSize(1024, 820);
 
     setupUi();
     applyAppTheme();
@@ -621,7 +634,7 @@ void MainWindow::updateHistoryNavigationState() {
     }
 }
 
-void MainWindow::setQuestionPanelMode(QuestionPanelMode mode) {
+void MainWindow::setQuestionPanelMode(QuestionPanelMode mode, bool syncHomeButtons) {
     if (statisticsViewActive_) {
         if (statisticsButton_) {
             QSignalBlocker blocker(statisticsButton_);
@@ -634,13 +647,23 @@ void MainWindow::setQuestionPanelMode(QuestionPanelMode mode) {
     panelMode_ = mode;
     const bool practice = panelMode_ == QuestionPanelMode::Practice;
 
-    if (questionsToggleButton_) {
-        QSignalBlocker blocker(questionsToggleButton_);
-        questionsToggleButton_->setChecked(practice);
+    if (syncHomeButtons) {
+        if (questionsToggleButton_) {
+            QSignalBlocker blocker(questionsToggleButton_);
+            questionsToggleButton_->setChecked(practice);
+        }
+        if (statsButton_) {
+            QSignalBlocker blocker(statsButton_);
+            statsButton_->setChecked(!practice);
+        }
     }
-    if (statsButton_) {
-        QSignalBlocker blocker(statsButton_);
-        statsButton_->setChecked(!practice);
+    if (headerQuestionsButton_) {
+        QSignalBlocker blocker(headerQuestionsButton_);
+        headerQuestionsButton_->setChecked(practice);
+    }
+    if (headerHistoryButton_) {
+        QSignalBlocker blocker(headerHistoryButton_);
+        headerHistoryButton_->setChecked(!practice);
     }
 
     if (navigationRow_) {
@@ -739,6 +762,14 @@ void MainWindow::showStatisticsView(bool active) {
             QSignalBlocker blocker(statsButton_);
             statsButton_->setChecked(false);
         }
+        if (headerQuestionsButton_) {
+            QSignalBlocker blocker(headerQuestionsButton_);
+            headerQuestionsButton_->setChecked(false);
+        }
+        if (headerHistoryButton_) {
+            QSignalBlocker blocker(headerHistoryButton_);
+            headerHistoryButton_->setChecked(false);
+        }
         if (statsPieWidget_) {
             statsPieWidget_->setVisible(true);
         }
@@ -752,7 +783,10 @@ void MainWindow::showStatisticsView(bool active) {
         if (toolStrip_) {
             toolStrip_->setVisible(true);
         }
-        contentStack_->setCurrentWidget(contentSplitter_);
+        // Use the splitter's parent page as the current widget
+        if (contentSplitter_ && contentSplitter_->parentWidget()) {
+            contentStack_->setCurrentWidget(contentSplitter_->parentWidget());
+        }
 
         const bool practice = panelMode_ == QuestionPanelMode::Practice;
         if (questionsToggleButton_) {
@@ -1125,7 +1159,9 @@ void MainWindow::refreshHistorySessionOptions() {
 
     if (currentUser_) {
         for (const auto &session : currentUser_->sessions) {
-            if (session.attempts.isEmpty()) {
+            // Include sessions that have attempts or non-zero hits/faults so historic
+            // sessions are visible even if individual attempts couldn't be loaded.
+            if (session.attempts.isEmpty() && session.hits == 0 && session.faults == 0) {
                 continue;
             }
             HistorySessionSource source;
@@ -1292,6 +1328,14 @@ void MainWindow::submitAnswer() {
     updateSessionLabels();
 }
 
+void MainWindow::showViewProfileDialog() {
+    if (!currentUser_ || guestSessionActive_) {
+        return;
+    }
+    ProfileDialog dialog(userManager_, *currentUser_, this, true);
+    dialog.exec();
+}
+
 void MainWindow::showProfileDialog() {
     if (!currentUser_ || guestSessionActive_) {
         return;
@@ -1303,14 +1347,6 @@ void MainWindow::showProfileDialog() {
     }
 }
 
-void MainWindow::showResultsDialog() {
-    if (!currentUser_ || guestSessionActive_) {
-        return;
-    }
-    ResultsDialog dialog(currentUser_->sessions, this);
-    dialog.exec();
-}
-
 void MainWindow::logout() {
     recordSessionIfNeeded();
     updateStatusMessage(tr("Sesión cerrada"));
@@ -1319,13 +1355,21 @@ void MainWindow::logout() {
 
 void MainWindow::toggleProtractor(bool checked) {
     if (chartScene_) {
-        chartScene_->setProtractorVisible(checked);
+        QPointF viewportCenter;
+        if (chartView_ && checked) {
+            viewportCenter = chartView_->mapToScene(chartView_->viewport()->rect().center());
+        }
+        chartScene_->setProtractorVisible(checked, viewportCenter);
     }
 }
 
 void MainWindow::toggleRuler(bool checked) {
     if (chartScene_) {
-        chartScene_->setRulerVisible(checked);
+        QPointF viewportCenter;
+        if (chartView_ && checked) {
+            viewportCenter = chartView_->mapToScene(chartView_->viewport()->rect().center());
+        }
+        chartScene_->setRulerVisible(checked, viewportCenter);
     }
 }
 
@@ -1454,264 +1498,284 @@ void MainWindow::validateLoginForm() {
 }
 
 void MainWindow::setupUi() {
-    auto *central = new QWidget(this);
-    auto *layout = new QVBoxLayout(central);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
+    ui_ = new Ui::MainWindow;
+    ui_->setupUi(this);
 
-    stack_ = new QStackedWidget(central);
-    loginPage_ = createLoginPage();
-    registerPage_ = createRegisterPage();
-    appPage_ = createAppPage();
-    stack_->addWidget(loginPage_);
-    stack_->addWidget(registerPage_);  
-    stack_->addWidget(appPage_);
+    // Map UI widgets to member pointers
+    stack_ = ui_->stack;
+    loginPage_ = ui_->loginPage;
+    registerPage_ = ui_->registerPage;
+    appPage_ = ui_->appPage;
 
-    layout->addWidget(stack_);
-    setCentralWidget(central);
-}
-
-QWidget *MainWindow::createLoginPage() {
-    auto *page = new QWidget(this);
-    page->setObjectName("LoginPage");
-    auto *outerLayout = new QVBoxLayout(page);
-    outerLayout->setContentsMargins(0, 0, 0, 0);
-    outerLayout->setSpacing(0);
-
-    auto *centerWrapper = new QWidget(page);
-    centerWrapper->setObjectName("LoginCenter");
-    auto *centerLayout = new QVBoxLayout(centerWrapper);
-    centerLayout->setContentsMargins(0, 0, 0, 0);
-    centerLayout->setSpacing(0);
-    centerLayout->setAlignment(Qt::AlignCenter);
-
-    auto *card = new QFrame(centerWrapper);
-    card->setObjectName("LoginCard");
-    card->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    auto *cardLayout = new QVBoxLayout(card);
-    cardLayout->setContentsMargins(22, 24, 22, 26);
-    cardLayout->setSpacing(14);
-
-    loginFormPage_ = buildLoginFormPage(card);
-    cardLayout->addWidget(loginFormPage_);
-
-    centerLayout->addWidget(card, 0, Qt::AlignCenter);
-    outerLayout->addWidget(centerWrapper, 1);
-
-    return page;
-}
-
-// --------------- Registration Page ----------------
-QWidget *MainWindow::createRegisterPage() {
-    auto *page = new QWidget(this);
-    page->setObjectName("RegistrationPage");
-    auto *outerLayout = new QVBoxLayout(page);
-    outerLayout->setContentsMargins(0, 0, 0, 0);
-    outerLayout->setSpacing(0);
-
-    auto *centerWrapper = new QWidget(page);
-    centerWrapper->setObjectName("RegisterCenter");
-    auto *centerLayout = new QVBoxLayout(centerWrapper);
-    centerLayout->setContentsMargins(0, 0, 0, 0);
-    centerLayout->setSpacing(0);
-    centerLayout->setAlignment(Qt::AlignCenter);
-
-    auto *card = new QFrame(centerWrapper);
-    card->setObjectName("RegisterCard");
-    card->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    auto *cardLayout = new QVBoxLayout(card);
-    cardLayout->setContentsMargins(22, 24, 22, 26);
-    cardLayout->setSpacing(14);
+    // Login page widgets
+    loginUserEdit_ = ui_->loginUserEdit;
+    loginPasswordEdit_ = ui_->loginPasswordEdit;
     
-    registerFormPage_ = buildRegisterFormPage(card);
-    cardLayout->addWidget(registerFormPage_);
-
-    centerLayout->addWidget(card, 0, Qt::AlignCenter);
-    outerLayout->addWidget(centerWrapper, 1);
-
-    return page;
-}
-
-// ------------------------------------------------
-
-
-
-QWidget *MainWindow::buildLoginFormPage(QWidget *parent) {
-    auto *page = new QWidget(parent);
-    auto *layout = new QVBoxLayout(page);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(8);
-
-    auto *title = new QLabel(tr("Bienvenido de nuevo"), page);
-    title->setObjectName("LoginTitle");
-
-    auto *subtitle = new QLabel(tr("Inicia sesión para continuar navegando por la carta."), page);
-    subtitle->setObjectName("LoginSubtitle");
-    subtitle->setWordWrap(true);
-
-    loginUserEdit_ = new QLineEdit(page);
-    loginUserEdit_->setPlaceholderText(tr("Usuario"));
-    loginUserEdit_->setClearButtonEnabled(true);
-
-    loginPasswordEdit_ = new QLineEdit(page);
-    loginPasswordEdit_->setEchoMode(QLineEdit::Password);
-    loginPasswordEdit_->setPlaceholderText(tr("Contraseña"));
-    loginPasswordEdit_->setClearButtonEnabled(true);
-
-    loginFeedbackLabel_ = new QLabel(page);
-    loginFeedbackLabel_->setObjectName("LoginFeedback");
-    loginFeedbackLabel_->setWordWrap(true);
+    // Add eye toggle for login password
+    auto *loginPasswordToggle = loginPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    loginPasswordToggle->setCheckable(true);
+    connect(loginPasswordToggle, &QAction::toggled, this, [this, loginPasswordToggle](bool checked) {
+        loginPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        loginPasswordToggle->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+    
+    loginButton_ = ui_->loginButton;
+    guestLoginButton_ = ui_->guestLoginButton;
+    loginFeedbackLabel_ = ui_->loginFeedbackLabel;
     loginFeedbackLabel_->setVisible(false);
 
-    loginButton_ = new QPushButton(tr("Entrar"), page);
-    loginButton_->setObjectName("LoginButton");
-    loginButton_->setEnabled(false);
+    // Register page widgets
+    registerNicknameEdit_ = ui_->registerNicknameEdit;
+    registerEmailEdit_ = ui_->registerEmailEdit;
+    registerPasswordEdit_ = ui_->registerPasswordEdit;
+    registerConfirmPasswordEdit_ = ui_->registerConfirmPasswordEdit;
+    
+    // Add eye toggle for register password
+    auto *registerPasswordToggle = registerPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    registerPasswordToggle->setCheckable(true);
+    connect(registerPasswordToggle, &QAction::toggled, this, [this, registerPasswordToggle](bool checked) {
+        registerPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        registerPasswordToggle->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+    
+    // Add eye toggle for register confirm password
+    auto *registerConfirmPasswordToggle = registerConfirmPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    registerConfirmPasswordToggle->setCheckable(true);
+    connect(registerConfirmPasswordToggle, &QAction::toggled, this, [this, registerConfirmPasswordToggle](bool checked) {
+        registerConfirmPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        registerConfirmPasswordToggle->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+    
+    registerBirthdateEdit_ = ui_->registerBirthdateEdit;
+    registerBirthdateEdit_->setDate(QDate::currentDate().addYears(-18));
+    registerAvatarPreview_ = ui_->registerAvatarPreview;
+    registerAvatarPreview_->setPixmap(QPixmap(kDefaultAvatarPath).scaled(kAvatarPreviewSize, kAvatarPreviewSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    registerFeedbackLabel_ = ui_->registerFeedbackLabel;
+    registerFeedbackLabel_->setVisible(false);
+    registerSubmitButton_ = ui_->registerSubmitButton;
 
-    guestLoginButton_ = new QPushButton(tr("Acceso de Invitado"), page);
-    guestLoginButton_->setObjectName("GuestLoginButton");
-    guestLoginButton_->setCursor(Qt::PointingHandCursor);
-    guestLoginButton_->setStyleSheet(QStringLiteral(
-        "QPushButton {"
-        "background-color: #ffffff;"
-        "color: #0b3d70;"
-        "border: 1px solid #0b3d70;"
-        "border-radius: 8px;"
-        "padding: 8px 14px;"
-        "font-weight: 600;"
-        "}"
-        "QPushButton:hover {"
-        "background-color: #f2f6ff;"
-        "}"
-        "QPushButton:pressed {"
-        "background-color: #e3ecff;"
-        "}"
-    ));
+    // App page widgets
+    topBar_ = ui_->topBar;
+    userSummaryLabel_ = ui_->userSummaryLabel;
+    questionsToggleButton_ = ui_->questionsToggleButton;
+    statsButton_ = ui_->statsButton;
+    statisticsButton_ = ui_->statisticsButton;
+    sessionStatsLabel_ = ui_->sessionStatsLabel;
+    statusMessageLabel_ = ui_->statusMessageLabel;
+    statusMessageLabel_->setVisible(false);
+    userMenuButton_ = ui_->userMenuButton;
+    userMenuButton_->setIconSize(QSize(kAvatarIconSize, kAvatarIconSize));
+    userMenuButton_->setIcon(QIcon(makeCircularAvatar(kDefaultAvatarPath)));
 
-    auto *registerRow = new QHBoxLayout();
-    registerRow->setContentsMargins(0, 0, 0, 0);
-    registerRow->setSpacing(8);
-    auto *registerHint = new QLabel(tr("¿Aún no tienes cuenta?"), page);
-    registerHint->setObjectName("RegisterHint");
-    auto *registerButton = new QPushButton(tr("Crear cuenta"), page);
-    registerButton->setObjectName("RegisterButton");
-    registerButton->setCursor(Qt::PointingHandCursor);
-    registerRow->addWidget(registerHint);
-    registerRow->addWidget(registerButton);
-    registerRow->addStretch(1);
+    // Home taskbar button group: ensure a persistent pressed state (exclusive)
+    homeButtonGroup_ = new QButtonGroup(this);
+    homeButtonGroup_->setExclusive(true);
+    if (questionsToggleButton_) {
+        homeButtonGroup_->addButton(questionsToggleButton_);
+    }
+    if (statsButton_) {
+        homeButtonGroup_->addButton(statsButton_);
+    }
+    if (statisticsButton_) {
+        homeButtonGroup_->addButton(statisticsButton_);
+        // If the statistics button is toggled off, fallback to practice mode button
+        connect(statisticsButton_, &QToolButton::toggled, this, [this](bool checked) {
+            if (!checked) {
+                if (questionsToggleButton_) {
+                    QSignalBlocker blocker(questionsToggleButton_);
+                    questionsToggleButton_->setChecked(true);
+                }
+            }
+        });
+    }
 
-    layout->addWidget(title);
-    layout->addWidget(subtitle);
-    layout->addSpacing(6);
-    layout->addWidget(loginUserEdit_);
-    layout->addWidget(loginPasswordEdit_);
-    layout->addWidget(loginFeedbackLabel_);
-    layout->addWidget(loginButton_);
-    layout->addWidget(guestLoginButton_);
-    layout->addLayout(registerRow);
+    // Content area
+    contentStack_ = ui_->contentStack;
+    contentSplitter_ = ui_->contentSplitter;
+    contentSplitter_->setStretchFactor(0, 3);
+    contentSplitter_->setStretchFactor(1, 2);
 
+    // Chart area
+    toolStrip_ = ui_->toolStrip;
+
+    // Create chart scene and view
+    chartScene_ = new ChartScene(this);
+    chartScene_->setBackgroundPixmap(QPixmap(":/resources/images/carta_nautica.png"));
+
+    chartView_ = ui_->chartView;
+    chartView_->setScene(chartScene_);
+    chartView_->setHandNavigationEnabled(true);
+
+    // Problem card
+    problemCard_ = ui_->problemCard;
+    collapseProblemButton_ = ui_->collapseProblemButton;
+    collapseProblemButton_->setIcon(QIcon(":/resources/images/icon_cross.svg"));
+    collapseProblemButton_->setIconSize(QSize(26, 26));
+    problemBody_ = ui_->problemBody;
+    navigationRow_ = ui_->navigationRow;
+    problemCombo_ = ui_->problemCombo;
+    randomButton_ = ui_->randomButton;
+    historyControlsRow_ = ui_->historyControlsRow;
+    historyControlsRow_->setVisible(false);
+    historySessionCombo_ = ui_->historySessionCombo;
+    historyStatusLabel_ = ui_->historyStatusLabel;
+    historyStatusLabel_->setVisible(false);
+    problemStatement_ = ui_->problemStatement;
+    // Header buttons for toggling questions/history within the problem card
+    headerQuestionsButton_ = ui_->headerQuestionsButton;
+    headerHistoryButton_ = ui_->headerHistoryButton;
+    headerButtonGroup_ = new QButtonGroup(this);
+    headerButtonGroup_->setExclusive(true);
+    if (headerQuestionsButton_) {
+        headerButtonGroup_->addButton(headerQuestionsButton_);
+        connect(headerQuestionsButton_, &QToolButton::pressed, this, [this]() { setQuestionPanelMode(QuestionPanelMode::Practice, false); });
+    }
+    if (headerHistoryButton_) {
+        headerButtonGroup_->addButton(headerHistoryButton_);
+        connect(headerHistoryButton_, &QToolButton::pressed, this, [this]() { setQuestionPanelMode(QuestionPanelMode::History, false); });
+    }
+    prevProblemButton_ = ui_->prevProblemButton;
+    prevProblemButton_->setIcon(QIcon(":/resources/images/icon_chevron_left.svg"));
+    prevProblemButton_->setIconSize(QSize(28, 28));
+    nextProblemButton_ = ui_->nextProblemButton;
+    nextProblemButton_->setIcon(QIcon(":/resources/images/icon_chevron_right.svg"));
+    nextProblemButton_->setIconSize(QSize(28, 28));
+    submitButton_ = ui_->submitButton;
+
+    // Answer options
+    answerButtons_ = new QButtonGroup(this);
+    answerButtons_->setExclusive(true);
+    answerOptions_.clear();
+    answerOptions_.push_back(ui_->answerOption_0);
+    answerOptions_.push_back(ui_->answerOption_1);
+    answerOptions_.push_back(ui_->answerOption_2);
+    answerOptions_.push_back(ui_->answerOption_3);
+    for (int i = 0; i < answerOptions_.size(); ++i) {
+        answerOptions_[i]->setVisible(false);
+        answerButtons_->addButton(answerOptions_[i], i);
+    }
+
+    // Statistics page
+    statisticsPage_ = ui_->statisticsPage;
+    statsSummaryCard_ = ui_->statsSummaryCard;
+    statsChartCard_ = ui_->statsChartCard;
+    statsTableCard_ = ui_->statsTableCard;
+    statsTotalValueLabel_ = ui_->statsTotalValueLabel;
+    statsCorrectValueLabel_ = ui_->statsCorrectValueLabel;
+    statsIncorrectValueLabel_ = ui_->statsIncorrectValueLabel;
+    statsAccuracyValueLabel_ = ui_->statsAccuracyValueLabel;
+    statsSessionsTable_ = ui_->statsSessionsTable;
+    statsSessionsTable_->horizontalHeader()->setStretchLastSection(true);
+    statsSessionsTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    statsSessionsTable_->verticalHeader()->setVisible(false);
+    statsEmptyStateLabel_ = ui_->statsEmptyStateLabel;
+    statsEmptyStateLabel_->setVisible(false);
+
+    // Create custom chart widgets and add to hosts
+    statsTrendWidget_ = new StatsTrendWidget(ui_->statsTrendHost);
+    auto *trendLayout = new QVBoxLayout(ui_->statsTrendHost);
+    trendLayout->setContentsMargins(0, 0, 0, 0);
+    trendLayout->addWidget(statsTrendWidget_);
+
+    statsPieWidget_ = new StatsPieWidget(ui_->statsPieHost);
+    auto *pieLayout = new QVBoxLayout(ui_->statsPieHost);
+    pieLayout->setContentsMargins(0, 0, 0, 0);
+    pieLayout->addWidget(statsPieWidget_);
+
+    // Create user menu
+    userMenu_ = new QMenu(userMenuButton_);
+    viewProfileAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_profile.svg"), tr("Ver Perfil"));
+    profileAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_profile_edit.svg"), tr("Editar perfil"));
+    userMenu_->addSeparator();
+    logoutAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_logout.svg"), tr("Cerrar sesión"));
+    viewProfileAction_->setIconVisibleInMenu(true);
+    profileAction_->setIconVisibleInMenu(true);
+    logoutAction_->setIconVisibleInMenu(true);
+    userMenuButton_->setMenu(userMenu_);
+
+    // Build tool buttons in tool strip
+    buildToolButtons(toolStrip_);
+
+    // Connect login page signals
     connect(loginUserEdit_, &QLineEdit::textChanged, this, &MainWindow::validateLoginForm);
     connect(loginPasswordEdit_, &QLineEdit::textChanged, this, &MainWindow::validateLoginForm);
     connect(loginPasswordEdit_, &QLineEdit::returnPressed, this, &MainWindow::attemptLogin);
     connect(loginButton_, &QPushButton::clicked, this, &MainWindow::attemptLogin);
     connect(guestLoginButton_, &QPushButton::clicked, this, &MainWindow::startGuestSession);
-    connect(registerButton, &QPushButton::clicked, this, &MainWindow::showRegistrationForm);
+    connect(ui_->registerButton, &QPushButton::clicked, this, &MainWindow::showRegistrationForm);
 
-    return page;
-}
-
-QWidget *MainWindow::buildRegisterFormPage(QWidget *parent) {
-    auto *page = new QWidget(parent);
-    page->setObjectName("RegisterPage");
-    auto *layout = new QVBoxLayout(page);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(12);
-
-    auto *title = new QLabel(tr("Crear cuenta"), page);
-    title->setObjectName("RegisterTitle");
-
-    auto *subtitle = new QLabel(tr("Configura tu cuenta para comenzar a practicar."), page);
-    subtitle->setObjectName("RegisterSubtitle");
-    subtitle->setWordWrap(true);
-
-    auto *formLayout = new QFormLayout();
-    formLayout->setContentsMargins(0, 0, 0, 0);
-    formLayout->setSpacing(10);
-
-    registerNicknameEdit_ = new QLineEdit(page);
-    registerNicknameEdit_->setPlaceholderText(tr("Entre 6 y 15 caracteres"));
-
-    registerEmailEdit_ = new QLineEdit(page);
-    registerEmailEdit_->setPlaceholderText(tr("ejemplo@correo.com"));
-
-    registerPasswordEdit_ = new QLineEdit(page);
-    registerPasswordEdit_->setEchoMode(QLineEdit::Password);
-
-    registerConfirmPasswordEdit_ = new QLineEdit(page);
-    registerConfirmPasswordEdit_->setEchoMode(QLineEdit::Password);
-
-    registerBirthdateEdit_ = new QDateEdit(QDate::currentDate().addYears(-18), page);
-    registerBirthdateEdit_->setCalendarPopup(true);
-    registerBirthdateEdit_->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-
-    registerAvatarPreview_ = new QLabel(page);
-    registerAvatarPreview_->setObjectName("AvatarPreview");
-    registerAvatarPreview_->setFixedSize(kAvatarPreviewSize, kAvatarPreviewSize);
-    registerAvatarPreview_->setPixmap(QPixmap(kDefaultAvatarPath).scaled(kAvatarPreviewSize, kAvatarPreviewSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-
-    auto *avatarButton = new QPushButton(tr("Seleccionar avatar"), page);
-    avatarButton->setObjectName("AvatarButton");
-
-    auto *avatarLayout = new QHBoxLayout();
-    avatarLayout->setContentsMargins(0, 0, 0, 0);
-    avatarLayout->setSpacing(12);
-    avatarLayout->addWidget(registerAvatarPreview_);
-    avatarLayout->addWidget(avatarButton);
-    avatarLayout->addStretch(1);
-
-    formLayout->addRow(tr("Usuario"), registerNicknameEdit_);
-    formLayout->addRow(tr("Correo electrónico"), registerEmailEdit_);
-    formLayout->addRow(tr("Contraseña"), registerPasswordEdit_);
-    formLayout->addRow(tr("Confirmar contraseña"), registerConfirmPasswordEdit_);
-    formLayout->addRow(tr("Fecha de nacimiento"), registerBirthdateEdit_);
-    formLayout->addRow(tr("Avatar"), avatarLayout);
-
-    registerFeedbackLabel_ = new QLabel(page);
-    registerFeedbackLabel_->setObjectName("RegisterFeedback");
-    registerFeedbackLabel_->setWordWrap(true);
-    registerFeedbackLabel_->setVisible(false);
-
-    registerSubmitButton_ = new QPushButton(tr("Crear cuenta"), page);
-    registerSubmitButton_->setObjectName("RegisterSubmitButton");
-    registerSubmitButton_->setEnabled(false);
-
-    auto *backButton = new QPushButton(tr("Ya tengo cuenta"), page);
-    backButton->setObjectName("BackToLoginButton");
-
-    layout->addWidget(title);
-    layout->addWidget(subtitle);
-    layout->addLayout(formLayout);
-    layout->addWidget(registerFeedbackLabel_);
-    layout->addWidget(registerSubmitButton_);
-    layout->addWidget(backButton);
-
-    const auto triggerValidation = [this]() {
-        validateRegisterForm();
-    };
-
+    // Connect register page signals
+    const auto triggerValidation = [this]() { validateRegisterForm(); };
     connect(registerNicknameEdit_, &QLineEdit::textChanged, this, triggerValidation);
     connect(registerEmailEdit_, &QLineEdit::textChanged, this, triggerValidation);
     connect(registerPasswordEdit_, &QLineEdit::textChanged, this, triggerValidation);
     connect(registerConfirmPasswordEdit_, &QLineEdit::textChanged, this, triggerValidation);
     connect(registerBirthdateEdit_, &QDateEdit::dateChanged, this, [this](const QDate &) { validateRegisterForm(); });
-    connect(avatarButton, &QPushButton::clicked, this, &MainWindow::selectRegisterAvatar);
+    connect(ui_->avatarButton, &QPushButton::clicked, this, &MainWindow::selectRegisterAvatar);
     connect(registerSubmitButton_, &QPushButton::clicked, this, &MainWindow::handleRegisterSubmit);
-    connect(backButton, &QPushButton::clicked, this, &MainWindow::showLoginForm);
+    connect(ui_->backToLoginButton, &QPushButton::clicked, this, &MainWindow::showLoginForm);
 
-    return page;
+    // Connect app page signals
+    connect(questionsToggleButton_, &QToolButton::pressed, this, [this]() {
+        if (statisticsViewActive_) {
+            showStatisticsView(false);
+        }
+        setQuestionPanelMode(QuestionPanelMode::Practice);
+    });
+    connect(statsButton_, &QToolButton::pressed, this, [this]() {
+        // Show the map (chart) and collapse the questions panel
+        if (statisticsViewActive_) {
+            showStatisticsView(false);
+        }
+        if (collapseProblemButton_) {
+            QSignalBlocker blocker(collapseProblemButton_);
+            collapseProblemButton_->setChecked(true);
+        }
+        toggleProblemPanel(true);
+        if (contentStack_ && contentSplitter_ && contentSplitter_->parentWidget()) {
+            contentStack_->setCurrentWidget(contentSplitter_->parentWidget());
+        }
+    });
+    connect(statisticsButton_, &QToolButton::pressed, this, [this]() {
+        showStatisticsView(!statisticsViewActive_);
+    });
+    connect(viewProfileAction_, &QAction::triggered, this, &MainWindow::showViewProfileDialog);
+    connect(profileAction_, &QAction::triggered, this, &MainWindow::showProfileDialog);
+    connect(logoutAction_, &QAction::triggered, this, &MainWindow::logout);
+    connect(problemCombo_, &QComboBox::currentIndexChanged, this, &MainWindow::loadProblemFromSelection);
+    connect(randomButton_, &QPushButton::clicked, this, &MainWindow::loadRandomProblem);
+    connect(historySessionCombo_, qOverload<int>(&QComboBox::currentIndexChanged), this, &MainWindow::handleHistorySessionSelectionChanged);
+    connect(prevProblemButton_, &QPushButton::clicked, this, &MainWindow::goToPreviousProblem);
+    connect(nextProblemButton_, &QPushButton::clicked, this, &MainWindow::goToNextProblem);
+    connect(collapseProblemButton_, &QToolButton::toggled, this, &MainWindow::toggleProblemPanel);
+    connect(answerButtons_, &QButtonGroup::idClicked, this, [this](int) {
+        submitButton_->setEnabled(true);
+        for (auto *radio : answerOptions_) {
+            radio->setStyleSheet(QString());
+        }
+    });
+    connect(submitButton_, &QPushButton::clicked, this, &MainWindow::submitAnswer);
+    connect(contentSplitter_, &QSplitter::splitterMoved, this, &MainWindow::handleSplitterMoved);
+
+    toggleProblemPanel(false);
+    updateProblemNavigationState();
+    applyProblemPaneConstraints();
 }
 
 void MainWindow::showRegistrationForm() {
-    if (!stack_ || !registerPage_ || !registerFormPage_) {
+    if (!stack_ || !registerPage_) {
         return;
     }
     resetRegisterForm();
@@ -1727,7 +1791,7 @@ void MainWindow::showRegistrationForm() {
 }
 
 void MainWindow::showLoginForm() {
-    if (!stack_ || !loginPage_ || !loginFormPage_) {
+    if (!stack_ || !loginPage_) {
         return;
     }
     stack_->setCurrentWidget(loginPage_);
@@ -1954,427 +2018,6 @@ bool MainWindow::validateRegisterInputs(QString &errorMessage) const {
     return true;
 }
 
-QWidget *MainWindow::createAppPage() {
-    auto *page = new QWidget(this);
-    auto *layout = new QVBoxLayout(page);
-    layout->setContentsMargins(24, 24, 24, 24);
-    layout->setSpacing(16);
-
-    // Chart must exist before building tool strip
-    chartScene_ = new ChartScene(this);
-    chartScene_->setBackgroundPixmap(QPixmap(":/resources/images/carta_nautica.png"));
-
-    chartView_ = new ChartView(this);
-    chartView_->setScene(chartScene_);
-    chartView_->setHandNavigationEnabled(true);
-    chartView_->setFrameShape(QFrame::NoFrame);
-    chartView_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    chartView_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    auto *topBar = new QFrame(page);
-    topBar_ = topBar;
-    topBar->setObjectName("TopBar");
-    auto *topLayout = new QHBoxLayout(topBar);
-    topLayout->setContentsMargins(24, 16, 24, 16);
-    topLayout->setSpacing(16);
-
-    auto *title = new QLabel(tr("Proyecto PER"), topBar);
-    title->setObjectName("AppTitle");
-
-    userSummaryLabel_ = new QLabel(tr("Sin sesión activa"), topBar);
-    userSummaryLabel_->setObjectName("UserSummary");
-
-    questionsToggleButton_ = new QToolButton(topBar);
-    questionsToggleButton_->setObjectName("QuestionsToggleButton");
-    questionsToggleButton_->setText(tr("Preguntas"));
-    questionsToggleButton_->setCheckable(true);
-    questionsToggleButton_->setChecked(true);
-    questionsToggleButton_->setAutoRaise(true);
-    questionsToggleButton_->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    questionsToggleButton_->setEnabled(false);
-
-    statsButton_ = new QToolButton(topBar);
-    statsButton_->setObjectName("StatsButton");
-    statsButton_->setText(tr("Histórico"));
-    statsButton_->setAutoRaise(true);
-    statsButton_->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    statsButton_->setCheckable(true);
-    statsButton_->setEnabled(false);
-
-    auto *historyStatsSeparator = new QLabel(tr("|"), topBar);
-    historyStatsSeparator->setObjectName("HistoryStatsSeparator");
-    historyStatsSeparator->setStyleSheet(QStringLiteral("color: #6e7781;"));
-
-    statisticsButton_ = new QToolButton(topBar);
-    statisticsButton_->setObjectName("StatisticsButton");
-    statisticsButton_->setText(tr("Estadísticas"));
-    statisticsButton_->setAutoRaise(true);
-    statisticsButton_->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    statisticsButton_->setCheckable(true);
-    statisticsButton_->setEnabled(false);
-
-    sessionStatsLabel_ = new QLabel(tr("Aciertos: 0 · Fallos: 0"), topBar);
-    sessionStatsLabel_->setObjectName("SessionStats");
-
-    statusMessageLabel_ = new QLabel(topBar);
-    statusMessageLabel_->setObjectName("StatusMessageLabel");
-    statusMessageLabel_->setVisible(false);
-    statusMessageLabel_->setStyleSheet(QStringLiteral("color: #6e7781;"));
-
-    userMenuButton_ = new QToolButton(topBar);
-    userMenuButton_->setObjectName("UserButton");
-    userMenuButton_->setAutoRaise(true);
-    userMenuButton_->setPopupMode(QToolButton::InstantPopup);
-    userMenuButton_->setIconSize(QSize(kAvatarIconSize, kAvatarIconSize));
-    userMenuButton_->setIcon(QIcon(makeCircularAvatar(kDefaultAvatarPath)));
-
-    userMenu_ = new QMenu(userMenuButton_);
-    profileAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_profile.svg"), tr("Editar perfil"));
-    resultsAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_results.svg"), tr("Historial de sesiones"));
-    userMenu_->addSeparator();
-    logoutAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_logout.svg"), tr("Cerrar sesión"));
-    profileAction_->setIconVisibleInMenu(true);
-    resultsAction_->setIconVisibleInMenu(true);
-    logoutAction_->setIconVisibleInMenu(true);
-    userMenuButton_->setMenu(userMenu_);
-
-    topLayout->addWidget(title);
-    topLayout->addSpacing(12);
-    topLayout->addWidget(userSummaryLabel_);
-    topLayout->addWidget(questionsToggleButton_);
-    topLayout->addWidget(statsButton_);
-    topLayout->addWidget(historyStatsSeparator);
-    topLayout->addWidget(statisticsButton_);
-    topLayout->addStretch(1);
-    topLayout->addWidget(sessionStatsLabel_);
-    topLayout->addWidget(statusMessageLabel_);
-    topLayout->addWidget(userMenuButton_);
-
-    layout->addWidget(topBar);
-
-    auto *chartCard = new QFrame(page);
-    chartCard->setObjectName("ChartCard");
-    chartCard->setMinimumWidth(520);
-    auto *chartLayout = new QVBoxLayout(chartCard);
-    chartLayout->setContentsMargins(16, 16, 16, 16);
-    chartLayout->setSpacing(12);
-
-    toolStrip_ = createToolStrip(chartCard);
-    chartLayout->addWidget(toolStrip_);
-    chartLayout->addWidget(chartView_, 1);
-
-    problemCard_ = new QFrame(page);
-    problemCard_->setObjectName("ProblemCard");
-    problemCard_->setMinimumWidth(kProblemPaneDefaultMinWidth);
-    auto *problemLayout = new QVBoxLayout(problemCard_);
-    problemLayout->setContentsMargins(16, 16, 16, 16);
-    problemLayout->setSpacing(12);
-
-    auto *problemHeader = new QHBoxLayout();
-    problemHeader->setContentsMargins(0, 0, 0, 0);
-    problemHeader->setSpacing(8);
-
-    auto *problemTitle = new QLabel(tr("Problemas de examen"), problemCard_);
-    problemTitle->setObjectName("ProblemTitle");
-
-    collapseProblemButton_ = new QToolButton(problemCard_);
-    collapseProblemButton_->setObjectName("ProblemCollapseButton");
-    collapseProblemButton_->setCheckable(true);
-    collapseProblemButton_->setChecked(false);
-    collapseProblemButton_->setIcon(QIcon(":/resources/images/icon_cross.svg"));
-    collapseProblemButton_->setIconSize(QSize(26, 26));
-    collapseProblemButton_->setToolTip(tr("Ocultar panel"));
-
-    problemHeader->addWidget(problemTitle);
-    problemHeader->addStretch(1);
-    problemHeader->addWidget(collapseProblemButton_);
-
-    problemBody_ = new QWidget(problemCard_);
-    auto *bodyLayout = new QVBoxLayout(problemBody_);
-    bodyLayout->setContentsMargins(0, 0, 0, 0);
-    bodyLayout->setSpacing(10);
-
-    navigationRow_ = new QWidget(problemBody_);
-    navigationRow_->setObjectName("ProblemNavigationRow");
-    auto *navigationLayout = new QHBoxLayout(navigationRow_);
-    navigationLayout->setContentsMargins(0, 0, 0, 0);
-    navigationLayout->setSpacing(8);
-
-    prevProblemButton_ = new QPushButton(problemBody_);
-    prevProblemButton_->setObjectName("PrevProblemButton");
-    prevProblemButton_->setFlat(false);
-    prevProblemButton_->setText(QString());
-    prevProblemButton_->setIcon(style()->standardIcon(QStyle::SP_ArrowBack));
-    prevProblemButton_->setIconSize(QSize(20, 20));
-    prevProblemButton_->setToolTip(tr("Pregunta anterior"));
-    prevProblemButton_->setFixedSize(kNavigationButtonSize, kNavigationButtonSize);
-
-    problemCombo_ = new QComboBox(problemBody_);
-    problemCombo_->setObjectName("ProblemSelector");
-
-    nextProblemButton_ = new QPushButton(problemBody_);
-    nextProblemButton_->setObjectName("NextProblemButton");
-    nextProblemButton_->setFlat(false);
-    nextProblemButton_->setText(QString());
-    nextProblemButton_->setIcon(style()->standardIcon(QStyle::SP_ArrowForward));
-    nextProblemButton_->setIconSize(QSize(20, 20));
-    nextProblemButton_->setToolTip(tr("Pregunta siguiente"));
-    nextProblemButton_->setFixedSize(kNavigationButtonSize, kNavigationButtonSize);
-
-    randomButton_ = new QPushButton(tr("Aleatorio"), problemBody_);
-    randomButton_->setObjectName("RandomButton");
-
-    navigationLayout->addWidget(problemCombo_, 1);
-    navigationLayout->addWidget(randomButton_);
-
-    historyControlsRow_ = new QWidget(problemBody_);
-    historyControlsRow_->setObjectName("HistoryControlsRow");
-    auto *historyControlsLayout = new QHBoxLayout(historyControlsRow_);
-    historyControlsLayout->setContentsMargins(0, 0, 0, 0);
-    historyControlsLayout->setSpacing(8);
-
-    auto *historySessionLabel = new QLabel(tr("Sesión"), historyControlsRow_);
-    historySessionCombo_ = new QComboBox(historyControlsRow_);
-    historySessionCombo_->setObjectName("HistorySessionCombo");
-    historySessionCombo_->setEnabled(false);
-
-    historyControlsLayout->addWidget(historySessionLabel);
-    historyControlsLayout->addWidget(historySessionCombo_, 1);
-    historyControlsLayout->addStretch(1);
-    historyControlsRow_->setVisible(false);
-
-    historyStatusLabel_ = new QLabel(problemBody_);
-    historyStatusLabel_->setObjectName("HistoryStatusLabel");
-    historyStatusLabel_->setVisible(false);
-    historyStatusLabel_->setWordWrap(true);
-
-    auto *questionSection = new QFrame(problemBody_);
-    questionSection->setObjectName("QuestionSection");
-    auto *questionLayout = new QVBoxLayout(questionSection);
-    questionLayout->setContentsMargins(12, 12, 12, 12);
-    questionLayout->setSpacing(12);
-
-    problemStatement_ = new QTextEdit(questionSection);
-    problemStatement_->setObjectName("ProblemStatement");
-    problemStatement_->setReadOnly(true);
-    problemStatement_->setWordWrapMode(QTextOption::WordWrap);
-    problemStatement_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    problemStatement_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    problemStatement_->setFixedHeight(220);
-    problemStatement_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    questionLayout->addWidget(problemStatement_);
-
-    answerButtons_ = new QButtonGroup(this);
-    answerButtons_->setExclusive(true);
-
-    answerOptions_.clear();
-    for (int index = 0; index < 4; ++index) {
-        auto *option = new QRadioButton(questionSection);
-        option->setObjectName(QStringLiteral("AnswerOption_%1").arg(index));
-        option->setVisible(false);
-        answerButtons_->addButton(option, index);
-        answerOptions_.push_back(option);
-        questionLayout->addWidget(option);
-    }
-
-    questionLayout->addStretch(1);
-
-    submitButton_ = new QPushButton(tr("Comprobar respuesta"), problemBody_);
-    submitButton_->setObjectName("SubmitButton");
-    submitButton_->setEnabled(false);
-    submitButton_->setFixedHeight(kNavigationButtonSize);
-
-    auto *actionLayout = new QHBoxLayout();
-    actionLayout->setContentsMargins(0, 0, 0, 0);
-    actionLayout->setSpacing(8);
-    actionLayout->addWidget(prevProblemButton_);
-    actionLayout->addWidget(submitButton_, 1);
-    actionLayout->addWidget(nextProblemButton_);
-
-    bodyLayout->addWidget(navigationRow_);
-    bodyLayout->addWidget(historyControlsRow_);
-    bodyLayout->addWidget(historyStatusLabel_);
-    bodyLayout->addWidget(questionSection);
-    bodyLayout->addStretch(1);
-    bodyLayout->addLayout(actionLayout);
-
-    problemLayout->addLayout(problemHeader);
-    problemLayout->addWidget(problemBody_);
-
-    contentSplitter_ = new QSplitter(Qt::Horizontal, page);
-    contentSplitter_->setObjectName("ContentSplitter");
-    contentSplitter_->setHandleWidth(12);
-    contentSplitter_->setChildrenCollapsible(false);
-    contentSplitter_->addWidget(chartCard);
-    contentSplitter_->addWidget(problemCard_);
-    contentSplitter_->setStretchFactor(0, 3);
-    contentSplitter_->setStretchFactor(1, 2);
-
-    contentStack_ = new QStackedWidget(page);
-    contentStack_->setObjectName("ContentStack");
-    contentStack_->addWidget(contentSplitter_);
-    statisticsPage_ = createStatisticsPage(contentStack_);
-    contentStack_->addWidget(statisticsPage_);
-    contentStack_->setCurrentWidget(contentSplitter_);
-
-    layout->addWidget(contentStack_, 1);
-
-    auto *viewToggleGroup = new QButtonGroup(this);
-    viewToggleGroup->setExclusive(true);
-    viewToggleGroup->addButton(questionsToggleButton_);
-    viewToggleGroup->addButton(statsButton_);
-
-    connect(questionsToggleButton_, &QToolButton::clicked, this, [this]() {
-        setQuestionPanelMode(QuestionPanelMode::Practice);
-    });
-
-    connect(statsButton_, &QToolButton::clicked, this, [this]() {
-        setQuestionPanelMode(QuestionPanelMode::History);
-    });
-
-    if (statisticsButton_) {
-        connect(statisticsButton_, &QToolButton::toggled, this, &MainWindow::showStatisticsView);
-    }
-
-    connect(profileAction_, &QAction::triggered, this, &MainWindow::showProfileDialog);
-    connect(resultsAction_, &QAction::triggered, this, &MainWindow::showResultsDialog);
-    connect(logoutAction_, &QAction::triggered, this, &MainWindow::logout);
-
-    connect(problemCombo_, &QComboBox::currentIndexChanged, this, &MainWindow::loadProblemFromSelection);
-    connect(randomButton_, &QPushButton::clicked, this, &MainWindow::loadRandomProblem);
-    if (historySessionCombo_) {
-        connect(historySessionCombo_, qOverload<int>(&QComboBox::currentIndexChanged), this, &MainWindow::handleHistorySessionSelectionChanged);
-    }
-    connect(prevProblemButton_, &QPushButton::clicked, this, &MainWindow::goToPreviousProblem);
-    connect(nextProblemButton_, &QPushButton::clicked, this, &MainWindow::goToNextProblem);
-    connect(collapseProblemButton_, &QToolButton::toggled, this, &MainWindow::toggleProblemPanel);
-    connect(answerButtons_, &QButtonGroup::idClicked, this, [this](int) {
-        submitButton_->setEnabled(true);
-        for (auto *radio : answerOptions_) {
-            radio->setStyleSheet(QString());
-        }
-    });
-    connect(submitButton_, &QPushButton::clicked, this, &MainWindow::submitAnswer);
-    if (contentSplitter_) {
-        connect(contentSplitter_, &QSplitter::splitterMoved, this, &MainWindow::handleSplitterMoved);
-    }
-
-    toggleProblemPanel(false);
-    updateProblemNavigationState();
-    applyProblemPaneConstraints();
-
-    return page;
-}
-
-QWidget *MainWindow::createStatisticsPage(QWidget *parent) {
-    auto *page = new QWidget(parent);
-    page->setObjectName("StatisticsPage");
-    auto *layout = new QVBoxLayout(page);
-    layout->setContentsMargins(24, 24, 24, 24);
-    layout->setSpacing(14);
-
-    auto *title = new QLabel(tr("Panel de estadísticas"), page);
-    title->setObjectName("StatisticsTitle");
-    title->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-
-    statsSummaryCard_ = new QFrame(page);
-    statsSummaryCard_->setObjectName("StatsSummaryCard");
-    auto *summaryLayout = new QGridLayout(statsSummaryCard_);
-    summaryLayout->setContentsMargins(24, 20, 24, 20);
-    summaryLayout->setSpacing(18);
-
-    const auto createStatBlock = [&](const QString &labelText, QLabel *&valueLabel) {
-        auto *container = new QWidget(statsSummaryCard_);
-        container->setObjectName("StatsSummaryBlock");
-        auto *containerLayout = new QVBoxLayout(container);
-        containerLayout->setContentsMargins(0, 0, 0, 0);
-        containerLayout->setSpacing(4);
-        containerLayout->setAlignment(Qt::AlignCenter);
-
-        auto *label = new QLabel(labelText, container);
-        label->setObjectName("StatsBlockLabel");
-        label->setAlignment(Qt::AlignCenter);
-
-        valueLabel = new QLabel(QStringLiteral("--"), container);
-        valueLabel->setObjectName("StatsBlockValue");
-        valueLabel->setAlignment(Qt::AlignCenter);
-
-        containerLayout->addWidget(label);
-        containerLayout->addWidget(valueLabel);
-        return container;
-    };
-
-    summaryLayout->addWidget(createStatBlock(tr("Respondidas"), statsTotalValueLabel_), 0, 0);
-    summaryLayout->addWidget(createStatBlock(tr("Correctas"), statsCorrectValueLabel_), 0, 1);
-    summaryLayout->addWidget(createStatBlock(tr("Incorrectas"), statsIncorrectValueLabel_), 0, 2);
-    summaryLayout->addWidget(createStatBlock(tr("Precisión"), statsAccuracyValueLabel_), 0, 3);
-    summaryLayout->setColumnStretch(0, 1);
-    summaryLayout->setColumnStretch(1, 1);
-    summaryLayout->setColumnStretch(2, 1);
-    summaryLayout->setColumnStretch(3, 1);
-
-    statsChartCard_ = new QFrame(page);
-    statsChartCard_->setObjectName("StatsChartCard");
-    auto *chartLayout = new QVBoxLayout(statsChartCard_);
-    chartLayout->setContentsMargins(24, 20, 24, 24);
-    chartLayout->setSpacing(12);
-
-    auto *chartTitle = new QLabel(tr("Tendencia y distribución"), statsChartCard_);
-    chartTitle->setObjectName("StatsBlockLabel");
-    chartLayout->addWidget(chartTitle);
-
-    auto *chartContentLayout = new QHBoxLayout();
-    chartContentLayout->setContentsMargins(0, 0, 0, 0);
-    chartContentLayout->setSpacing(16);
-
-    statsTrendWidget_ = new StatsTrendWidget(statsChartCard_);
-    statsPieWidget_ = new StatsPieWidget(statsChartCard_);
-    chartContentLayout->addWidget(statsTrendWidget_, 3);
-    chartContentLayout->addWidget(statsPieWidget_, 2);
-
-    chartLayout->addLayout(chartContentLayout);
-
-    statsTableCard_ = new QFrame(page);
-    statsTableCard_->setObjectName("StatsTableCard");
-    auto *tableLayout = new QVBoxLayout(statsTableCard_);
-    tableLayout->setContentsMargins(24, 20, 24, 24);
-    tableLayout->setSpacing(12);
-
-    auto *tableTitle = new QLabel(tr("Sesiones recientes"), statsTableCard_);
-    tableTitle->setObjectName("StatsBlockLabel");
-
-    statsSessionsTable_ = new QTableWidget(statsTableCard_);
-    statsSessionsTable_->setObjectName("StatsSessionsTable");
-    statsSessionsTable_->setColumnCount(5);
-    statsSessionsTable_->setHorizontalHeaderLabels({tr("Fecha"), tr("Respondidas"), tr("Correctas"), tr("Incorrectas"), tr("Precisión")});
-    statsSessionsTable_->horizontalHeader()->setStretchLastSection(true);
-    statsSessionsTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    statsSessionsTable_->verticalHeader()->setVisible(false);
-    statsSessionsTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    statsSessionsTable_->setSelectionMode(QAbstractItemView::NoSelection);
-    statsSessionsTable_->setFocusPolicy(Qt::NoFocus);
-    statsSessionsTable_->setShowGrid(false);
-    statsSessionsTable_->setAlternatingRowColors(true);
-
-    tableLayout->addWidget(tableTitle);
-    tableLayout->addWidget(statsSessionsTable_, 1);
-
-    statsEmptyStateLabel_ = new QLabel(tr("Todavía no hay datos de práctica. Responde algunas preguntas para generar estadísticas."), page);
-    statsEmptyStateLabel_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
-    statsEmptyStateLabel_->setWordWrap(true);
-    statsEmptyStateLabel_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    statsEmptyStateLabel_->setMinimumHeight(220);
-    statsEmptyStateLabel_->setVisible(false);
-
-    layout->addWidget(title);
-    layout->addWidget(statsSummaryCard_);
-    layout->addWidget(statsChartCard_);
-    layout->addWidget(statsTableCard_, 1);
-    layout->addWidget(statsEmptyStateLabel_, 0, Qt::AlignCenter);
-
-    return page;
-}
-
 QWidget *MainWindow::createToolStrip(QWidget *parent) {
     auto *strip = new QFrame(parent);
     strip->setObjectName("ToolStrip");
@@ -2382,6 +2025,7 @@ QWidget *MainWindow::createToolStrip(QWidget *parent) {
     layout->setContentsMargins(18, 12, 18, 12);
     layout->setSpacing(10);
 
+    layout->addStretch(1);
     buildToolButtons(strip);
     layout->addStretch(1);
     return strip;
@@ -2533,7 +2177,7 @@ void MainWindow::updateToolStripLayout() {
     const QMargins margins = compact ? QMargins(12, 10, 12, 10) : QMargins(18, 12, 18, 12);
     layout->setContentsMargins(margins);
     layout->setSpacing(compact ? 8 : 12);
-    layout->setAlignment(compact ? (Qt::AlignLeft | Qt::AlignVCenter) : (Qt::AlignHCenter | Qt::AlignVCenter));
+    layout->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
     const QSize iconSize = compact ? QSize(24, 24) : QSize(28, 28);
 
@@ -2580,7 +2224,8 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
 
     populateProblems();
     if (problemCombo_ && problemCombo_->count() > 0) {
-        loadRandomProblem();
+        problemCombo_->setCurrentIndex(0);
+        loadProblemFromSelection(0);
     } else {
         problemStatement_->setPlainText(tr("No se han encontrado problemas."));
     }
@@ -2595,6 +2240,11 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
         questionsToggleButton_->setEnabled(true);
         QSignalBlocker blocker(questionsToggleButton_);
         questionsToggleButton_->setChecked(true);
+    }
+    if (headerQuestionsButton_) {
+        headerQuestionsButton_->setEnabled(true);
+        QSignalBlocker blocker(headerQuestionsButton_);
+        headerQuestionsButton_->setChecked(true);
     }
     if (statsButton_) {
         statsButton_->setEnabled(true);
@@ -2614,8 +2264,8 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
     if (profileAction_) {
         profileAction_->setEnabled(!guestSessionActive_);
     }
-    if (resultsAction_) {
-        resultsAction_->setEnabled(!guestSessionActive_);
+    if (viewProfileAction_) {
+        viewProfileAction_->setEnabled(!guestSessionActive_);
     }
 }
 
@@ -2648,8 +2298,8 @@ void MainWindow::returnToLogin() {
     if (profileAction_) {
         profileAction_->setEnabled(true);
     }
-    if (resultsAction_) {
-        resultsAction_->setEnabled(true);
+    if (viewProfileAction_) {
+        viewProfileAction_->setEnabled(true);
     }
 
     if (pointAction_) {
@@ -2719,7 +2369,7 @@ void MainWindow::returnToLogin() {
 
     showStatisticsView(false);
 
-    userSummaryLabel_->setText(tr("Sin sesión activa"));
+    //userSummaryLabel_->setText(tr("Sin sesión activa"));
     sessionStatsLabel_->setText(tr("Aciertos: 0 · Fallos: 0"));
     userMenuButton_->setIcon(QIcon(makeCircularAvatar(kDefaultAvatarPath)));
     userMenuButton_->setToolTip(QString());
@@ -2730,13 +2380,13 @@ void MainWindow::returnToLogin() {
 
 void MainWindow::updateUserPanel() {
     if (!currentUser_) {
-        userSummaryLabel_->setText(tr("Sin sesión activa"));
+        //userSummaryLabel_->setText(tr("Sin sesión activa"));
         userMenuButton_->setIcon(QIcon(makeCircularAvatar(kDefaultAvatarPath)));
         return;
     }
 
     const auto &user = *currentUser_;
-    userSummaryLabel_->setText(tr("Hola, %1").arg(user.nickname));
+    // userSummaryLabel_->setText(user.nickname);
 
     const QString avatarFile = userManager_.resolvedAvatarPath(user.avatarPath);
     userMenuButton_->setIcon(QIcon(makeCircularAvatar(avatarFile)));

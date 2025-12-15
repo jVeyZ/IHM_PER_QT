@@ -6,6 +6,8 @@
 #include <QString>
 #include <QVector>
 
+#include "navigation.h"
+
 struct AnswerOption {
     QString text;
     bool valid = false;
@@ -21,7 +23,7 @@ struct ProblemEntry {
 class ProblemManager : public QObject {
     Q_OBJECT
 public:
-    explicit ProblemManager(QString storagePath, QObject *parent = nullptr);
+    explicit ProblemManager(Navigation &navigation, QObject *parent = nullptr);
 
     bool load();
     QVector<ProblemEntry> problems() const;
@@ -32,6 +34,6 @@ signals:
     void problemsChanged();
 
 private:
-    QString storagePath_;
+    Navigation &navigation_;
     QVector<ProblemEntry> problems_;
 };

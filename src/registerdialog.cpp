@@ -2,6 +2,7 @@
 
 #include "usermanager.h"
 
+#include <QAction>
 #include <QDate>
 #include <QDateEdit>
 #include <QFileDialog>
@@ -93,8 +94,33 @@ void RegisterDialog::setupUi() {
     emailEdit_ = new QLineEdit();
     passwordEdit_ = new QLineEdit();
     passwordEdit_->setEchoMode(QLineEdit::Password);
+    passwordEdit_->setClearButtonEnabled(false);
+    
+    togglePasswordAction_ = passwordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    togglePasswordAction_->setCheckable(true);
+    connect(togglePasswordAction_, &QAction::toggled, this, [this](bool checked) {
+        passwordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        togglePasswordAction_->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+    
     confirmPasswordEdit_ = new QLineEdit();
     confirmPasswordEdit_->setEchoMode(QLineEdit::Password);
+    confirmPasswordEdit_->setClearButtonEnabled(false);
+    
+    toggleConfirmPasswordAction_ = confirmPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    toggleConfirmPasswordAction_->setCheckable(true);
+    connect(toggleConfirmPasswordAction_, &QAction::toggled, this, [this](bool checked) {
+        confirmPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        toggleConfirmPasswordAction_->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
 
     birthdateEdit_ = new QDateEdit(QDate::currentDate().addYears(-18));
     birthdateEdit_->setCalendarPopup(true);

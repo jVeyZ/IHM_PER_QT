@@ -8,6 +8,8 @@
 #include <QString>
 #include <QVector>
 
+#include "navigation.h"
+
 struct AttemptOption {
     QString text;
     bool correct = false;
@@ -43,11 +45,9 @@ struct UserRecord {
 
 class UserManager {
 public:
-    explicit UserManager(QString storagePath, QString avatarsDirectory);
+    explicit UserManager(Navigation &navigation, QString avatarsDirectory);
 
     bool load();
-    bool save() const;
-
     bool registerUser(const QString &nickname,
                       const QString &email,
                       const QString &password,
@@ -78,7 +78,21 @@ private:
     QString ensureAvatarStored(const QString &nickname, const QString &sourcePath, QString &errorMessage) const;
     int findIndex(const QString &nickname) const;
 
-    QString storagePath_;
+    QString encodePasswordPayload(const QString &salt, const QString &hash) const;
+    void decodePasswordPayload(const QString &payload, QString &saltOut, QString &hashOut) const;
+    UserRecord makeRecordFromNavUser(const User &navUser) const;
+    SessionRecord makeRecordFromNavSession(const QString &nickname, const Session &navSession) const;
+    QString persistAvatarImage(const QString &nickname, const QImage &image) const;
+    QImage loadAvatarImage(const QString &path) const;
+    QString resolveDatabasePath() const;
+    bool ensureHistoryStorage(QString &errorMessage) const;
+    QVector<QuestionAttempt> loadSessionAttempts(const QString &nickname, const QDateTime &sessionTimestamp) const;
+    bool storeSessionAttempts(const QString &nickname, const SessionRecord &session, QString &errorMessage) const;
+    QString historyConnectionName() const;
+
+    Navigation &navigation_;
     QString avatarsDirectory_;
+    QString databasePath_;
+    mutable bool historyStorageReady_ = false;
     QVector<UserRecord> users_;
 };
