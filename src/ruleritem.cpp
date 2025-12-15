@@ -19,7 +19,7 @@ RulerItem::RulerItem(QGraphicsItem *parent)
 }
 
 QRectF RulerItem::boundingRect() const {
-    return QRectF(-length_ / 2.0, -18.0, length_, 36.0);
+    return QRectF(-length_ / 2.0, -25.0, length_, 50.0); // Increased width
 }
 
 void RulerItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
@@ -79,17 +79,14 @@ void RulerItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     startAngle_ = std::atan2(rotationStartVector_.y(), rotationStartVector_.x());
     lastPointerScenePos_ = event->scenePos();
 
-    if (nearTop || nearBottom) {
+
+    if ((nearTop || nearBottom) && (nearLeftEdge || nearRightEdge)) {
         rotating_ = true;
         resizeEdge_ = ResizeEdge::None;
         setCursor(Qt::SizeAllCursor);
-        rotationPivotScene_ = rotationCenterScene_;
-        rotationPivotLocal_ = QPointF(0.0, 0.0);
-        if (nearLeftEdge || nearRightEdge) {
-            const double pivotX = nearLeftEdge ? bounds.right() : bounds.left();
-            rotationPivotLocal_ = QPointF(pivotX, 0.0);
-            rotationPivotScene_ = mapToScene(rotationPivotLocal_);
-        }
+        const double pivotX = nearLeftEdge ? bounds.right() : bounds.left();
+        rotationPivotLocal_ = QPointF(pivotX, 0.0);
+        rotationPivotScene_ = mapToScene(rotationPivotLocal_);
         event->accept();
         return;
     }

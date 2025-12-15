@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>780</height>
+    <height>820</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>1024</width>
-    <height>680</height>
+    <height>720</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -779,7 +779,7 @@
           </property>
           <layout class="QHBoxLayout" name="topBarLayout">
            <property name="spacing">
-            <number>16</number>
+            <number>8</number>
            </property>
            <property name="leftMargin">
             <number>24</number>
@@ -825,7 +825,29 @@
               <string notr="true">UserSummary</string>
              </property>
              <property name="text">
-              <string>Sin sesión activa</string>
+              <string></string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="statsButton">
+             <property name="objectName">
+              <string notr="true">StatsButton</string>
+             </property>
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Mapa</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
+             </property>
+             <property name="toolButtonStyle">
+              <enum>Qt::ToolButtonTextOnly</enum>
              </property>
             </widget>
            </item>
@@ -844,28 +866,6 @@
               <bool>true</bool>
              </property>
              <property name="checked">
-              <bool>true</bool>
-             </property>
-             <property name="autoRaise">
-              <bool>true</bool>
-             </property>
-             <property name="toolButtonStyle">
-              <enum>Qt::ToolButtonTextOnly</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QToolButton" name="statsButton">
-             <property name="objectName">
-              <string notr="true">StatsButton</string>
-             </property>
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Histórico</string>
-             </property>
-             <property name="checkable">
               <bool>true</bool>
              </property>
              <property name="autoRaise">
@@ -1102,14 +1102,59 @@
                    <number>8</number>
                   </property>
                   <item>
-                   <widget class="QLabel" name="problemTitle">
-                    <property name="objectName">
-                     <string notr="true">ProblemTitle</string>
-                    </property>
-                    <property name="text">
-                     <string>Problemas de examen</string>
-                    </property>
-                   </widget>
+                   <layout class="QHBoxLayout" name="problemTitleLayout">
+                    <item>
+                     <widget class="QToolButton" name="headerQuestionsButton">
+                      <property name="objectName">
+                       <string notr="true">HeaderQuestionsButton</string>
+                      </property>
+                      <property name="text">
+                       <string>Preguntas</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoRaise">
+                       <bool>true</bool>
+                      </property>
+                      <property name="toolButtonStyle">
+                       <enum>Qt::ToolButtonTextOnly</enum>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="headerSeparator">
+                      <property name="objectName">
+                       <string notr="true">HeaderSeparator</string>
+                      </property>
+                      <property name="text">
+                       <string>|</string>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">color: #6e7781;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="headerHistoryButton">
+                      <property name="objectName">
+                       <string notr="true">HeaderHistoryButton</string>
+                      </property>
+                      <property name="text">
+                       <string>Histórico</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoRaise">
+                       <bool>true</bool>
+                      </property>
+                      <property name="toolButtonStyle">
+                       <enum>Qt::ToolButtonTextOnly</enum>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                   <item>
                    <spacer name="problemHeaderSpacer">
@@ -1136,6 +1181,9 @@
                      <bool>true</bool>
                     </property>
                     <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                    <property name="autoRaise">
                      <bool>false</bool>
                     </property>
                    </widget>
@@ -1237,6 +1285,12 @@
                         <property name="enabled">
                          <bool>false</bool>
                         </property>
+                            <property name="sizePolicy">
+                             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <horstretch>0</horstretch>
+                              <verstretch>0</verstretch>
+                             </sizepolicy>
+                            </property>
                        </widget>
                       </item>
                       <item>
@@ -1297,20 +1351,33 @@
                         <property name="minimumSize">
                          <size>
                           <width>0</width>
-                          <height>220</height>
+                          <height>120</height>
                          </size>
                         </property>
-                        <property name="maximumSize">
-                         <size>
-                          <width>16777215</width>
-                          <height>220</height>
-                         </size>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
                         </property>
                         <property name="readOnly">
                          <bool>true</bool>
                         </property>
                         <property name="horizontalScrollBarPolicy">
                          <enum>Qt::ScrollBarAlwaysOff</enum>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="questionSeparator">
+                        <property name="objectName">
+                         <string notr="true">QuestionSeparator</string>
+                        </property>
+                        <property name="text">
+                         <string>__</string>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color: #6e7781; padding-left: 8px;</string>
                         </property>
                        </widget>
                       </item>

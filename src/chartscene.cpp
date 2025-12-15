@@ -458,6 +458,15 @@ void ChartScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void ChartScene::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Space) {
+        if (ruler_->rotation() == 0.0) {
+            ruler_->setRotation(90.0); // Snap to vertical
+        } else {
+            ruler_->setRotation(0.0); // Snap to horizontal
+        }
+        event->accept();
+        return;
+    }
     if (event->key() == Qt::Key_Escape) {
         cancelLineDraft();
         cancelArcDraft();

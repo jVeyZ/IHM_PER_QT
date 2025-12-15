@@ -55,7 +55,9 @@ QToolButton#UserButton:hover {
 
 QToolButton#QuestionsToggleButton,
 QToolButton#StatsButton,
-QToolButton#StatisticsButton {
+QToolButton#StatisticsButton,
+QToolButton#HeaderQuestionsButton,
+QToolButton#HeaderHistoryButton {
     border-radius: 16px;
     padding: 6px 18px;
     color: #1f2328;
@@ -64,29 +66,46 @@ QToolButton#StatisticsButton {
 
 QToolButton#QuestionsToggleButton:hover,
 QToolButton#StatsButton:hover,
-QToolButton#StatisticsButton:hover {
+QToolButton#StatisticsButton:hover,
+QToolButton#HeaderQuestionsButton:hover,
+QToolButton#HeaderHistoryButton:hover {
     background-color: #eff6ff;
 }
 
 QToolButton#QuestionsToggleButton:checked,
 QToolButton#StatsButton:checked,
-QToolButton#StatisticsButton:checked {
+QToolButton#StatisticsButton:checked,
+QToolButton#HeaderQuestionsButton:checked,
+QToolButton#HeaderHistoryButton:checked {
     background-color: #dbeaff;
     color: #0b3d70;
 }
 
-QToolButton#ProblemCollapseButton {
+QFrame#ProblemCard QToolButton#ProblemCollapseButton {
     border-radius: 8px;
     padding: 4px;
+    background-color: #f6f8fa; /* gray background */
+    border: none; /* remove visible border */
+    min-width: 30px;
+    min-height: 30px;
 }
 
-QToolButton#ProblemCollapseButton:hover {
-    background-color: #eff6ff;
+QFrame#ProblemCard QToolButton#ProblemCollapseButton:hover {
+    background-color: #e7f2ff;
+}
+
+QFrame#ProblemCard QToolButton#ProblemCollapseButton:pressed {
+    background-color: #dbeaff;
+}
+
+/* Ensure the icon inside doesn't draw its own background */
+QFrame#ProblemCard QToolButton#ProblemCollapseButton QIcon {
+    background: transparent;
 }
 
 QMenu {
     background-color: #ffffff;
-    border: 1px solid #d0d7de;
+    border: 1px solid #d0d7deff;
     border-radius: 12px;
     padding: 6px;
 }
@@ -214,6 +233,12 @@ QLabel#StatsBlockLabel {
     color: #6e7781;
     text-transform: uppercase;
     font-size: 13px;
+}
+
+QLabel#QuestionSeparator {
+    color: #6e7781;
+    padding-left: 8px;
+    font-weight: 500;
 }
 
 QLabel#StatsBlockValue {
@@ -355,6 +380,64 @@ QPushButton:hover {
     background-color: #1f6feb;
 }
 
+/* Calendar popup styling (light theme) */
+QCalendarWidget {
+    background-color: #ffffff;
+    color: #1f2328;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 6px;
+}
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: transparent;
+}
+QCalendarWidget QToolButton {
+    background-color: transparent;
+    color: #1f2328;
+    border: none;
+    padding: 6px;
+    border-radius: 6px;
+}
+QCalendarWidget QToolButton:hover {
+    background-color: #f0f6ff;
+}
+QCalendarWidget QTableView, QCalendarWidget QAbstractItemView {
+    background-color: #ffffff;
+    color: #1f2328;
+    gridline-color: #f3f6f9;
+    selection-background-color: #dbeaff;
+    selection-color: #0b0b0c;
+}
+QCalendarWidget QAbstractItemDelegate {
+    color: #1f2328;
+}
+QCalendarWidget QMenu {
+    background-color: #ffffff;
+    border: 1px solid #d0d7de;
+    color: #1f2328;
+}
+QCalendarWidget QSpinBox {
+    background-color: #ffffff;
+    color: #1f2328;
+}
+QCalendarWidget QAbstractItemView::item:enabled {
+    color: #1f2328;
+}
+QCalendarWidget QWidget#qt_calendar_navigationbar QToolButton#qt_calendar_prevmonth,
+QCalendarWidget QWidget#qt_calendar_navigationbar QToolButton#qt_calendar_nextmonth {
+    background-color: transparent;
+}
+QCalendarWidget QWidget#qt_calendar_navigationbar QLabel {
+    font-weight: 700;
+    color: #1f2328;
+    background-color: transparent;
+    padding: 4px 8px;
+}
+QCalendarWidget QTableView QTableCornerButton, QCalendarWidget QHeaderView::section {
+    background: transparent;
+}
+
+
 QPushButton:pressed {
     background-color: #1b4f9c;
 }
@@ -443,15 +526,75 @@ QLabel#AvatarPreview {
 }
 
 QFrame#QuestionSection {
-    background-color: #f3f6ff;
-    border: 1px solid #c7d3eb;
+    background-color: #ffffff;
+    border: 1px solid #d0d7de;
     border-radius: 18px;
+    padding: 12px;
+}
+
+QWidget#problemBody,
+QWidget#historyControlsRow {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+/* Ensure the inner area of the problem card and its rows are white */
+QFrame#ProblemCard > QWidget {
+    background-color: #ffffff;
+}
+QWidget#problemBody > QFrame#QuestionSection {
+    margin-top: 0px;
+}
+
+/* Accept both camel-case and lower-case object names used in the UI */
+QWidget#HistoryControlsRow,
+QWidget#historyControlsRow,
+QWidget#ProblemNavigationRow,
+QWidget#navigationRow {
+    background-color: #ffffff;
+}
+QWidget#ProblemBody,
+QWidget#problemBody {
+    background-color: #ffffff;
 }
 
 QTextEdit#ProblemStatement {
     background-color: transparent;
     border: none;
     padding: 0px;
+}
+
+QTextEdit#ProblemStatement QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 4px 2px;
+    border: none;
+    border-radius: 1px;
+}
+
+QTextEdit#ProblemStatement QScrollBar::handle:vertical {
+    background-color: #c7d3eb;
+    border-radius: 1px;
+    min-height: 30px;
+}
+
+QTextEdit#ProblemStatement QScrollBar::handle:vertical:hover {
+    background-color: #a8bdd8;
+}
+
+QTextEdit#ProblemStatement QScrollBar::handle:vertical:pressed {
+    background-color: #8aa6c7;
+}
+
+QTextEdit#ProblemStatement QScrollBar::add-line:vertical,
+QTextEdit#ProblemStatement QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QTextEdit#ProblemStatement QScrollBar::add-page:vertical,
+QTextEdit#ProblemStatement QScrollBar::sub-page:vertical {
+    background: transparent;
 }
 
 QRadioButton {

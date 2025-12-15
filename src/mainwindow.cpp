@@ -285,8 +285,8 @@ MainWindow::MainWindow(UserManager &userManager,
       userManager_(userManager),
       problemManager_(problemManager) {
     setWindowTitle(tr("Proyecto PER"));
-    resize(1200, 780);
-    setMinimumSize(1024, 680);
+    resize(1024, 820);
+    setMinimumSize(1024, 820);
 
     setupUi();
     applyAppTheme();
@@ -634,7 +634,7 @@ void MainWindow::updateHistoryNavigationState() {
     }
 }
 
-void MainWindow::setQuestionPanelMode(QuestionPanelMode mode) {
+void MainWindow::setQuestionPanelMode(QuestionPanelMode mode, bool syncHomeButtons) {
     if (statisticsViewActive_) {
         if (statisticsButton_) {
             QSignalBlocker blocker(statisticsButton_);
@@ -647,13 +647,23 @@ void MainWindow::setQuestionPanelMode(QuestionPanelMode mode) {
     panelMode_ = mode;
     const bool practice = panelMode_ == QuestionPanelMode::Practice;
 
-    if (questionsToggleButton_) {
-        QSignalBlocker blocker(questionsToggleButton_);
-        questionsToggleButton_->setChecked(practice);
+    if (syncHomeButtons) {
+        if (questionsToggleButton_) {
+            QSignalBlocker blocker(questionsToggleButton_);
+            questionsToggleButton_->setChecked(practice);
+        }
+        if (statsButton_) {
+            QSignalBlocker blocker(statsButton_);
+            statsButton_->setChecked(!practice);
+        }
     }
-    if (statsButton_) {
-        QSignalBlocker blocker(statsButton_);
-        statsButton_->setChecked(!practice);
+    if (headerQuestionsButton_) {
+        QSignalBlocker blocker(headerQuestionsButton_);
+        headerQuestionsButton_->setChecked(practice);
+    }
+    if (headerHistoryButton_) {
+        QSignalBlocker blocker(headerHistoryButton_);
+        headerHistoryButton_->setChecked(!practice);
     }
 
     if (navigationRow_) {
@@ -751,6 +761,14 @@ void MainWindow::showStatisticsView(bool active) {
         if (statsButton_) {
             QSignalBlocker blocker(statsButton_);
             statsButton_->setChecked(false);
+        }
+        if (headerQuestionsButton_) {
+            QSignalBlocker blocker(headerQuestionsButton_);
+            headerQuestionsButton_->setChecked(false);
+        }
+        if (headerHistoryButton_) {
+            QSignalBlocker blocker(headerHistoryButton_);
+            headerHistoryButton_->setChecked(false);
         }
         if (statsPieWidget_) {
             statsPieWidget_->setVisible(true);
@@ -1141,7 +1159,9 @@ void MainWindow::refreshHistorySessionOptions() {
 
     if (currentUser_) {
         for (const auto &session : currentUser_->sessions) {
-            if (session.attempts.isEmpty()) {
+            // Include sessions that have attempts or non-zero hits/faults so historic
+            // sessions are visible even if individual attempts couldn't be loaded.
+            if (session.attempts.isEmpty() && session.hits == 0 && session.faults == 0) {
                 continue;
             }
             HistorySessionSource source;
@@ -1308,6 +1328,14 @@ void MainWindow::submitAnswer() {
     updateSessionLabels();
 }
 
+void MainWindow::showViewProfileDialog() {
+    if (!currentUser_ || guestSessionActive_) {
+        return;
+    }
+    ProfileDialog dialog(userManager_, *currentUser_, this, true);
+    dialog.exec();
+}
+
 void MainWindow::showProfileDialog() {
     if (!currentUser_ || guestSessionActive_) {
         return;
@@ -1317,14 +1345,6 @@ void MainWindow::showProfileDialog() {
         currentUser_ = dialog.updatedUser();
         updateUserPanel();
     }
-}
-
-void MainWindow::showResultsDialog() {
-    if (!currentUser_ || guestSessionActive_) {
-        return;
-    }
-    ResultsDialog dialog(currentUser_->sessions, this);
-    dialog.exec();
 }
 
 void MainWindow::logout() {
@@ -1559,6 +1579,28 @@ void MainWindow::setupUi() {
     userMenuButton_->setIconSize(QSize(kAvatarIconSize, kAvatarIconSize));
     userMenuButton_->setIcon(QIcon(makeCircularAvatar(kDefaultAvatarPath)));
 
+    // Home taskbar button group: ensure a persistent pressed state (exclusive)
+    homeButtonGroup_ = new QButtonGroup(this);
+    homeButtonGroup_->setExclusive(true);
+    if (questionsToggleButton_) {
+        homeButtonGroup_->addButton(questionsToggleButton_);
+    }
+    if (statsButton_) {
+        homeButtonGroup_->addButton(statsButton_);
+    }
+    if (statisticsButton_) {
+        homeButtonGroup_->addButton(statisticsButton_);
+        // If the statistics button is toggled off, fallback to practice mode button
+        connect(statisticsButton_, &QToolButton::toggled, this, [this](bool checked) {
+            if (!checked) {
+                if (questionsToggleButton_) {
+                    QSignalBlocker blocker(questionsToggleButton_);
+                    questionsToggleButton_->setChecked(true);
+                }
+            }
+        });
+    }
+
     // Content area
     contentStack_ = ui_->contentStack;
     contentSplitter_ = ui_->contentSplitter;
@@ -1591,6 +1633,19 @@ void MainWindow::setupUi() {
     historyStatusLabel_ = ui_->historyStatusLabel;
     historyStatusLabel_->setVisible(false);
     problemStatement_ = ui_->problemStatement;
+    // Header buttons for toggling questions/history within the problem card
+    headerQuestionsButton_ = ui_->headerQuestionsButton;
+    headerHistoryButton_ = ui_->headerHistoryButton;
+    headerButtonGroup_ = new QButtonGroup(this);
+    headerButtonGroup_->setExclusive(true);
+    if (headerQuestionsButton_) {
+        headerButtonGroup_->addButton(headerQuestionsButton_);
+        connect(headerQuestionsButton_, &QToolButton::pressed, this, [this]() { setQuestionPanelMode(QuestionPanelMode::Practice, false); });
+    }
+    if (headerHistoryButton_) {
+        headerButtonGroup_->addButton(headerHistoryButton_);
+        connect(headerHistoryButton_, &QToolButton::pressed, this, [this]() { setQuestionPanelMode(QuestionPanelMode::History, false); });
+    }
     prevProblemButton_ = ui_->prevProblemButton;
     prevProblemButton_->setIcon(QIcon(":/resources/images/icon_chevron_left.svg"));
     prevProblemButton_->setIconSize(QSize(28, 28));
@@ -1641,12 +1696,12 @@ void MainWindow::setupUi() {
 
     // Create user menu
     userMenu_ = new QMenu(userMenuButton_);
-    profileAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_profile.svg"), tr("Editar perfil"));
-    resultsAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_results.svg"), tr("Historial de sesiones"));
+    viewProfileAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_profile.svg"), tr("Ver Perfil"));
+    profileAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_profile_edit.svg"), tr("Editar perfil"));
     userMenu_->addSeparator();
     logoutAction_ = userMenu_->addAction(QIcon(":/resources/images/icon_logout.svg"), tr("Cerrar sesión"));
+    viewProfileAction_->setIconVisibleInMenu(true);
     profileAction_->setIconVisibleInMenu(true);
-    resultsAction_->setIconVisibleInMenu(true);
     logoutAction_->setIconVisibleInMenu(true);
     userMenuButton_->setMenu(userMenu_);
 
@@ -1680,16 +1735,24 @@ void MainWindow::setupUi() {
         setQuestionPanelMode(QuestionPanelMode::Practice);
     });
     connect(statsButton_, &QToolButton::pressed, this, [this]() {
+        // Show the map (chart) and collapse the questions panel
         if (statisticsViewActive_) {
             showStatisticsView(false);
         }
-        setQuestionPanelMode(QuestionPanelMode::History);
+        if (collapseProblemButton_) {
+            QSignalBlocker blocker(collapseProblemButton_);
+            collapseProblemButton_->setChecked(true);
+        }
+        toggleProblemPanel(true);
+        if (contentStack_ && contentSplitter_ && contentSplitter_->parentWidget()) {
+            contentStack_->setCurrentWidget(contentSplitter_->parentWidget());
+        }
     });
     connect(statisticsButton_, &QToolButton::pressed, this, [this]() {
         showStatisticsView(!statisticsViewActive_);
     });
+    connect(viewProfileAction_, &QAction::triggered, this, &MainWindow::showViewProfileDialog);
     connect(profileAction_, &QAction::triggered, this, &MainWindow::showProfileDialog);
-    connect(resultsAction_, &QAction::triggered, this, &MainWindow::showResultsDialog);
     connect(logoutAction_, &QAction::triggered, this, &MainWindow::logout);
     connect(problemCombo_, &QComboBox::currentIndexChanged, this, &MainWindow::loadProblemFromSelection);
     connect(randomButton_, &QPushButton::clicked, this, &MainWindow::loadRandomProblem);
@@ -2178,6 +2241,11 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
         QSignalBlocker blocker(questionsToggleButton_);
         questionsToggleButton_->setChecked(true);
     }
+    if (headerQuestionsButton_) {
+        headerQuestionsButton_->setEnabled(true);
+        QSignalBlocker blocker(headerQuestionsButton_);
+        headerQuestionsButton_->setChecked(true);
+    }
     if (statsButton_) {
         statsButton_->setEnabled(true);
     }
@@ -2196,8 +2264,8 @@ void MainWindow::enterApplication(const UserRecord &user, bool guestMode) {
     if (profileAction_) {
         profileAction_->setEnabled(!guestSessionActive_);
     }
-    if (resultsAction_) {
-        resultsAction_->setEnabled(!guestSessionActive_);
+    if (viewProfileAction_) {
+        viewProfileAction_->setEnabled(!guestSessionActive_);
     }
 }
 
@@ -2230,8 +2298,8 @@ void MainWindow::returnToLogin() {
     if (profileAction_) {
         profileAction_->setEnabled(true);
     }
-    if (resultsAction_) {
-        resultsAction_->setEnabled(true);
+    if (viewProfileAction_) {
+        viewProfileAction_->setEnabled(true);
     }
 
     if (pointAction_) {
@@ -2301,7 +2369,7 @@ void MainWindow::returnToLogin() {
 
     showStatisticsView(false);
 
-    userSummaryLabel_->setText(tr("Sin sesión activa"));
+    //userSummaryLabel_->setText(tr("Sin sesión activa"));
     sessionStatsLabel_->setText(tr("Aciertos: 0 · Fallos: 0"));
     userMenuButton_->setIcon(QIcon(makeCircularAvatar(kDefaultAvatarPath)));
     userMenuButton_->setToolTip(QString());
@@ -2312,13 +2380,13 @@ void MainWindow::returnToLogin() {
 
 void MainWindow::updateUserPanel() {
     if (!currentUser_) {
-        userSummaryLabel_->setText(tr("Sin sesión activa"));
+        //userSummaryLabel_->setText(tr("Sin sesión activa"));
         userMenuButton_->setIcon(QIcon(makeCircularAvatar(kDefaultAvatarPath)));
         return;
     }
 
     const auto &user = *currentUser_;
-    userSummaryLabel_->setText(tr("Hola, %1").arg(user.nickname));
+    // userSummaryLabel_->setText(user.nickname);
 
     const QString avatarFile = userManager_.resolvedAvatarPath(user.avatarPath);
     userMenuButton_->setIcon(QIcon(makeCircularAvatar(avatarFile)));

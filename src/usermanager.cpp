@@ -482,6 +482,62 @@ QVector<QuestionAttempt> UserManager::loadSessionAttempts(const QString &nicknam
 					attempts.push_back(std::move(attempt));
 				}
 			}
+
+		// If no attempts were found using the exact session timestamp (may lack ms),
+		// try a looser match by using the ISO date without milliseconds as a prefix.
+		if (attempts.isEmpty()) {
+			const QString prefix = sessionKey(sessionTimestamp).section('.', 0, 0); // drop ms if present
+			query.prepare(QStringLiteral(
+				"SELECT attemptTimestamp, problemId, question, selectedAnswer, correctAnswer, wasCorrect, optionsJson, selectedIndex "
+				"FROM %1 WHERE userNickName = ? AND sessionTimestamp LIKE ? ORDER BY attemptTimestamp" ).arg(QString::fromLatin1(kHistoryTableName)));
+			query.addBindValue(nickname);
+			query.addBindValue(prefix + QLatin1Char('%'));
+
+			if (query.exec()) {
+				while (query.next()) {
+					QuestionAttempt attempt;
+					attempt.timestamp = QDateTime::fromString(query.value(0).toString(), Qt::ISODateWithMs);
+					attempt.problemId = query.value(1).toInt();
+					attempt.question = query.value(2).toString();
+					attempt.selectedAnswer = query.value(3).toString();
+					attempt.correctAnswer = query.value(4).toString();
+					attempt.correct = query.value(5).toInt() == 1;
+					attempt.selectedIndex = query.value(7).isNull() ? -1 : query.value(7).toInt();
+
+					const auto optionsDoc = QJsonDocument::fromJson(query.value(6).toByteArray());
+					if (optionsDoc.isArray()) {
+						const auto optionsArray = optionsDoc.array();
+						for (const auto &optionValue : optionsArray) {
+							if (!optionValue.isObject()) {
+								continue;
+							}
+							const auto optionObj = optionValue.toObject();
+							AttemptOption option;
+							option.text = optionObj.value("text").toString();
+							option.correct = optionObj.value("correct").toBool();
+							attempt.options.push_back(option);
+						}
+					}
+
+					if (attempt.options.isEmpty()) {
+						if (!attempt.selectedAnswer.isEmpty()) {
+							AttemptOption option;
+							option.text = attempt.selectedAnswer;
+							option.correct = attempt.correct;
+							attempt.options.push_back(option);
+						}
+						if (!attempt.correctAnswer.isEmpty() && attempt.correctAnswer != attempt.selectedAnswer) {
+							AttemptOption option;
+							option.text = attempt.correctAnswer;
+							option.correct = true;
+							attempt.options.push_back(option);
+						}
+					}
+
+					attempts.push_back(std::move(attempt));
+				}
+			}
+		}
 		}
 		db.close();
 	}

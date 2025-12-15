@@ -14,11 +14,15 @@
 #include <QRegularExpression>
 #include <QVBoxLayout>
 
-ProfileDialog::ProfileDialog(UserManager &manager, UserRecord user, QWidget *parent)
-    : QDialog(parent), manager_(manager), user_(std::move(user)) {
-    setWindowTitle(tr("Editar perfil"));
+ProfileDialog::ProfileDialog(UserManager &manager, UserRecord user, QWidget *parent, bool readOnly)
+    : QDialog(parent), manager_(manager), user_(std::move(user)), readOnly_(readOnly) {
+    setWindowTitle(readOnly_ ? tr("Ver Perfil") : tr("Editar perfil"));
     setModal(true);
-    setupUi();
+    if (readOnly_) {
+        setupReadOnlyUi();
+    } else {
+        setupUi();
+    }
 }
 
 const UserRecord &ProfileDialog::updatedUser() const {
@@ -153,6 +157,53 @@ void ProfileDialog::setupUi() {
     feedbackLabel_->setVisible(!ok);
     feedbackLabel_->setText(initialError);
     saveButton_->setEnabled(ok);
+}
+
+void ProfileDialog::setupReadOnlyUi() {
+    auto *layout = new QVBoxLayout(this);
+
+    auto *title = new QLabel(tr("Tu Perfil"));
+    title->setAlignment(Qt::AlignCenter);
+    title->setStyleSheet(QStringLiteral("font-size: 18px; font-weight: bold; color: #0b3d70;"));
+    layout->addWidget(title);
+
+    // Avatar display
+    avatarPreview_ = new QLabel();
+    avatarPreview_->setFixedSize(96, 96);
+    avatarPreview_->setStyleSheet(QStringLiteral("border: 1px solid #9cc6eb; border-radius: 6px;"));
+    const QString avatarPath = manager_.resolvedAvatarPath(user_.avatarPath);
+    avatarPreview_->setPixmap(QPixmap(avatarPath).scaled(96, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    avatarPreview_->setAlignment(Qt::AlignCenter);
+
+    auto *avatarContainer = new QWidget();
+    auto *avatarLayout = new QHBoxLayout(avatarContainer);
+    avatarLayout->setContentsMargins(0, 0, 0, 0);
+    avatarLayout->addStretch(1);
+    avatarLayout->addWidget(avatarPreview_);
+    avatarLayout->addStretch(1);
+    layout->addWidget(avatarContainer);
+
+    layout->addSpacing(10);
+
+    auto *form = new QFormLayout();
+    form->setLabelAlignment(Qt::AlignRight);
+
+    auto createReadOnlyLabel = [](const QString &text) {
+        auto *label = new QLabel(text);
+        label->setStyleSheet(QStringLiteral("padding: 6px; background: #f5f9fc; border: 1px solid #d0e3f0; border-radius: 4px;"));
+        return label;
+    };
+
+    form->addRow(tr("Usuario:"), createReadOnlyLabel(user_.nickname));
+    form->addRow(tr("Correo electrónico:"), createReadOnlyLabel(user_.email));
+    form->addRow(tr("Fecha de nacimiento:"), createReadOnlyLabel(user_.birthdate.toString(QStringLiteral("dd/MM/yyyy"))));
+
+    layout->addLayout(form);
+    layout->addStretch(1);
+
+    auto *closeButton = new QPushButton(tr("Cerrar"));
+    connect(closeButton, &QPushButton::clicked, this, &QDialog::accept);
+    layout->addWidget(closeButton);
 }
 
 bool ProfileDialog::validate(QString &errorMessage) const {

@@ -22,6 +22,7 @@
         <file alias="resources/images/icon_cross.svg">images/icon_cross.svg</file>
         <file alias="resources/images/icon_logout.svg">images/icon_logout.svg</file>
         <file alias="resources/images/icon_profile.svg">images/icon_profile.svg</file>
+        <file alias="resources/images/icon_profile_edit.svg">images/icon_profile_edit.svg</file>
         <file alias="resources/images/icon_results.svg">images/icon_results.svg</file>
         <file alias="resources/images/icon_theme.svg">images/icon_theme.svg</file>
         <file alias="resources/images/icon_chevron_down_light.svg">images/icon_chevron_down_light.svg</file>

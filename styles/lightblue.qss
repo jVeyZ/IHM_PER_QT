@@ -69,16 +69,61 @@ QHeaderView::section {
 QScrollBar:vertical {
     background: transparent;
     width: 12px;
-    margin: 4px;
+    margin: 4px 2px;
+    border: none;
+    border-radius: 6px;
 }
 
 QScrollBar::handle:vertical {
     background: #9cc6eb;
-    border-radius: 6px;
+    border-radius: 5px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #83b9eb;
+}
+
+QScrollBar::handle:vertical:pressed {
+    background: #6aacdf;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 12px;
+    margin: 2px 4px;
+    border: none;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #9cc6eb;
+    border-radius: 5px;
+    min-width: 30px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #83b9eb;
+}
+
+QScrollBar::handle:horizontal:pressed {
+    background: #6aacdf;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: transparent;
 }
 
 QMessageBox {

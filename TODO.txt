@@ -1,6 +1,1 @@
-
-juntar historico estadisticas
-
-
-
-ver contraseña
+Hacer bonito calendario 
