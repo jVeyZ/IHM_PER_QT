@@ -68,9 +68,10 @@ void ProtractorItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     const QRectF bounds = boundingRect();
     const QPointF localPos = event->pos();
     
-    // Check if near the edges for rotation (top/bottom edge)
-    const bool nearTop = localPos.y() < bounds.top() + 20.0;
-    const bool nearBottom = localPos.y() > bounds.bottom() - 20.0;
+    // Check if near the edges for rotation (top/bottom edge) using a fraction of height
+    const double threshold = std::max(12.0, bounds.height() * 0.12);
+    const bool nearTop = localPos.y() < bounds.top() + threshold;
+    const bool nearBottom = localPos.y() > bounds.bottom() - threshold;
     
     if (nearTop || nearBottom) {
         rotating_ = true;
@@ -114,9 +115,10 @@ void ProtractorItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 void ProtractorItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
     const QRectF bounds = boundingRect();
     const QPointF localPos = event->pos();
+    const double threshold = std::max(12.0, bounds.height() * 0.12);
     
     // Show rotation cursor near top/bottom edges
-    if (localPos.y() < bounds.top() + 20.0 || localPos.y() > bounds.bottom() - 20.0) {
+    if (localPos.y() < bounds.top() + threshold || localPos.y() > bounds.bottom() - threshold) {
         setCursor(Qt::SizeAllCursor);
         return;
     }

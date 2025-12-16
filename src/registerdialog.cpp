@@ -134,11 +134,34 @@ void RegisterDialog::setupUi() {
     auto *avatarButton = new QPushButton(tr("Seleccionar avatar"));
     connect(avatarButton, &QPushButton::clicked, this, &RegisterDialog::selectAvatar);
 
+    auto *nickHint = new QLabel(tr("Usuario"));
+    nickHint->setStyleSheet(QStringLiteral("color: #6b7280; font-size: 12px;"));
+    form->addRow(nickHint);
     form->addRow(tr("Usuario"), nicknameEdit_);
+
+    auto *emailHint = new QLabel(tr("Correo electrónico"));
+    emailHint->setStyleSheet(QStringLiteral("color: #6b7280; font-size: 12px;"));
+    form->addRow(emailHint);
     form->addRow(tr("Correo electrónico"), emailEdit_);
+
+    auto *passwordHint = new QLabel(tr("Contraseña"));
+    passwordHint->setStyleSheet(QStringLiteral("color: #6b7280; font-size: 12px;"));
+    form->addRow(passwordHint);
     form->addRow(tr("Contraseña"), passwordEdit_);
+
+    auto *confirmHint = new QLabel(tr("Confirmar contraseña"));
+    confirmHint->setStyleSheet(QStringLiteral("color: #6b7280; font-size: 12px;"));
+    form->addRow(confirmHint);
     form->addRow(tr("Confirmar contraseña"), confirmPasswordEdit_);
+
     form->addRow(tr("Fecha de nacimiento"), birthdateEdit_);
+
+    // Accessible names for automation / accessibility
+    nicknameEdit_->setAccessibleName(tr("usuario"));
+    emailEdit_->setAccessibleName(tr("email"));
+    passwordEdit_->setAccessibleName(tr("password"));
+    confirmPasswordEdit_->setAccessibleName(tr("confirm_password"));
+    birthdateEdit_->setAccessibleName(tr("birthdate"));
 
     auto *avatarLayout = new QHBoxLayout();
     avatarLayout->setContentsMargins(0, 0, 0, 0);

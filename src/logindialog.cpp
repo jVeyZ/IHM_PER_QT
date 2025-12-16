@@ -76,8 +76,21 @@ void LoginDialog::setupUi() {
             : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
     });
 
+    auto *nicknameHint = new QLabel(tr("Usuario"));
+    nicknameHint->setStyleSheet(QStringLiteral("color: #6b7280; font-size: 12px;"));
+    form->addRow(nicknameHint);
+
     form->addRow(tr("Usuario"), nicknameEdit_);
+
+    auto *passwordHint = new QLabel(tr("Contraseña"));
+    passwordHint->setStyleSheet(QStringLiteral("color: #6b7280; font-size: 12px;"));
+    form->addRow(passwordHint);
+
     form->addRow(tr("Contraseña"), passwordEdit_);
+
+    // Accessible names for automated tests / assistive tech
+    nicknameEdit_->setAccessibleName(tr("usuario"));
+    passwordEdit_->setAccessibleName(tr("password"));
 
     layout->addLayout(form);
 

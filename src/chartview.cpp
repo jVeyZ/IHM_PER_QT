@@ -12,6 +12,7 @@
 #include <QtGlobal>
 
 #include <algorithm>
+#include "chartscene.h"
 
 ChartView::ChartView(QWidget *parent)
     : QGraphicsView(parent) {
@@ -83,10 +84,37 @@ void ChartView::mousePressEvent(QMouseEvent *event) {
             const QPointF scenePos = mapToScene(event->pos());
             const bool isRulerTarget = cs->isRulerAt(scenePos);
             const bool isProtractorTarget = cs->isProtractorAt(scenePos);
+            const bool isCompassTarget = cs->isCompassAt(scenePos);
             if (isRulerTarget || isProtractorTarget) {
                 const DragMode savedMode = dragMode();
                 setDragMode(QGraphicsView::NoDrag);
                 QGraphicsView::mousePressEvent(event);
+                setDragMode(savedMode);
+                return;
+            }
+            // allow the compass pivot or handle to receive the click instead of starting a pan
+            if (isCompassTarget) {
+                const DragMode savedMode = dragMode();
+                setDragMode(QGraphicsView::NoDrag);
+                QGraphicsView::mousePressEvent(event);
+
+                // If, for any reason, the scene/item didn't grab the mouse (some view
+                // behaviors can intercept), attempt to start the appropriate drag
+                // directly on the compass as a fallback so the user can always drag.
+                if (auto *cs = qobject_cast<ChartScene *>(scene())) {
+                    const QPointF scenePos = mapToScene(event->pos());
+                    // Attempt to start a pivot/handle drag via ChartScene helper APIs.
+                    if (cs->beginCompassPivotDragIfTarget(scenePos) || cs->beginCompassHandleDragIfTarget(scenePos)) {
+                        // drag started by scene
+                    } else {
+                        // If hand navigation is active, allow rotation by clicking the
+                        // compass body (not pivot/handle)
+                        if (handNavigationEnabled_) {
+                            cs->beginCompassRotationIfTarget(scenePos);
+                        }
+                    }
+                }
+
                 setDragMode(savedMode);
                 return;
             }
@@ -118,6 +146,11 @@ void ChartView::mouseReleaseEvent(QMouseEvent *event) {
     if (handNavigationEnabled_ && panning_ && event->button() == Qt::LeftButton) {
         panning_ = false;
         viewport()->setCursor(Qt::OpenHandCursor);
+        if (auto *cs = qobject_cast<ChartScene *>(scene())) {
+            // also cancel any stray compass/ruler drags when panning finishes
+            cs->cancelCompassDrag();
+            cs->cancelRulerInteraction();
+        }
         event->accept();
         return;
     }
@@ -128,6 +161,14 @@ void ChartView::mouseReleaseEvent(QMouseEvent *event) {
 void ChartView::resizeEvent(QResizeEvent *event) {
     QGraphicsView::resizeEvent(event);
     updateViewportMask();
+}
+
+void ChartView::leaveEvent(QEvent *event) {
+    if (auto *cs = qobject_cast<ChartScene *>(scene())) {
+        cs->cancelCompassDrag();
+        cs->cancelRulerInteraction();
+    }
+    QGraphicsView::leaveEvent(event);
 }
 
 void ChartView::paintEvent(QPaintEvent *event) {

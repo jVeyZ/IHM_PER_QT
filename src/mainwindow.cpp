@@ -36,7 +36,6 @@
 #include <QPixmap>
 #include <QPushButton>
 #include <QRadioButton>
-#include <QRandomGenerator>
 #include <QResizeEvent>
 #include <QSignalBlocker>
 #include <QSize>
@@ -59,7 +58,6 @@
 #include <algorithm>
 #include <cmath>
 #include <QtGlobal>
-#include <random>
 
 namespace {
 constexpr int kAvatarIconSize = 40;
@@ -1373,6 +1371,16 @@ void MainWindow::toggleRuler(bool checked) {
     }
 }
 
+void MainWindow::toggleCompass(bool checked) {
+    if (chartScene_) {
+        QPointF viewportCenter;
+        if (chartView_ && checked) {
+            viewportCenter = chartView_->mapToScene(chartView_->viewport()->rect().center());
+        }
+        chartScene_->setCompassVisible(checked, viewportCenter);
+    }
+}
+
 void MainWindow::toggleFullscreenMode(bool checked) {
     fullScreenModeActive_ = checked;
     if (fullScreenAction_) {
@@ -2082,8 +2090,8 @@ void MainWindow::buildToolButtons(QWidget *toolStrip) {
     addToolButton(handAction_);
 
     addToolAction(pointAction_, ":/resources/images/icon_point.svg", tr("Punto"), ChartScene::Tool::Point);
-    addToolAction(lineAction_, ":/resources/images/icon_line.svg", tr("Línea"), ChartScene::Tool::Line);
-    addToolAction(arcAction_, ":/resources/images/icon_arc.svg", tr("Arco"), ChartScene::Tool::Arc);
+    addToolAction(lineAction_, ":/resources/images/icon_pencil.svg", tr("Lápiz (trazo libre)"), ChartScene::Tool::Line);
+    // original "Arco" toolbar button removed — compass toggle replaces this functionality
     addToolAction(textAction_, ":/resources/images/icon_text.svg", tr("Texto"), ChartScene::Tool::Text);
 
     addSeparator();
@@ -2132,6 +2140,15 @@ void MainWindow::buildToolButtons(QWidget *toolStrip) {
     rulerAction_->setCheckable(true);
     connect(rulerAction_, &QAction::toggled, this, &MainWindow::toggleRuler);
     addToolButton(rulerAction_, QSize(26, 26), QStringLiteral("utility-tool"));
+
+    // Compass toggle
+    compassAction_ = new QAction(QIcon(":/resources/images/icon_arc.svg"), tr("Mostrar compás"), this);
+    compassAction_->setCheckable(true);
+    compassAction_->setToolTip(tr("Compás: Muestra u oculta el compás.\n"
+                                 "Modo Mano activado: Arrastra el centro para mover o arrastra la pata para ajustar el radio.\n"
+                                 "Modo Dibujo activado: Haz clic en la pata y arrastra para dibujar un arco."));
+    connect(compassAction_, &QAction::toggled, this, &MainWindow::toggleCompass);
+    addToolButton(compassAction_, QSize(26, 26), QStringLiteral("utility-tool"));
 
     addSeparator();
 
@@ -2421,8 +2438,7 @@ void MainWindow::updateAnswerOptions() {
     for (int i = 0; i < problem.answers.size(); ++i) {
         order.push_back(i);
     }
-    std::mt19937 rng(QRandomGenerator::global()->generate());
-    std::shuffle(order.begin(), order.end(), rng);
+    // Keep answers in their original, static order. Do not shuffle the indices.
 
     for (int index = 0; index < answerOptions_.size(); ++index) {
         auto *option = answerOptions_.at(index);

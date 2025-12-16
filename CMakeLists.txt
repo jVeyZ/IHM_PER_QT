@@ -27,6 +27,7 @@ set(PROJECT_SOURCES
     src/chartview.cpp
     src/protractoritem.cpp
     src/ruleritem.cpp
+    src/compassitem.cpp
     src/distanceitem.cpp
     src/navigation.cpp
     src/navigationdao.cpp
@@ -43,6 +44,7 @@ set(PROJECT_HEADERS
     include/problemmanager.h
     include/protractoritem.h
     include/ruleritem.h
+    include/compassitem.h
     include/distanceitem.h
     include/usermanager.h
 )

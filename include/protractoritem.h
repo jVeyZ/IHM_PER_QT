@@ -31,9 +31,9 @@ protected:
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
 private:
-    double radius_ = 200.0;
-    double minRadius_ = 120.0;
-    double maxRadius_ = 400.0;
+    double radius_ = 340.0; // 1.7× larger
+    double minRadius_ = 204.0;
+    double maxRadius_ = 680.0;
     double svgAspectRatio_ = 1.0;
     std::unique_ptr<QSvgRenderer> svgRenderer_;
     

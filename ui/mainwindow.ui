@@ -167,12 +167,35 @@
             </spacer>
            </item>
            <item>
+            <widget class="QLabel" name="loginUserHint">
+             <property name="text">
+              <string>Usuario</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6b7280; font-size: 12px;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QLineEdit" name="loginUserEdit">
              <property name="placeholderText">
               <string>Usuario</string>
              </property>
              <property name="clearButtonEnabled">
               <bool>true</bool>
+             </property>
+             <property name="accessibleName">
+              <string>usuario</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="loginPasswordHint">
+             <property name="text">
+              <string>Contraseña</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6b7280; font-size: 12px;</string>
              </property>
             </widget>
            </item>
@@ -186,6 +209,9 @@
              </property>
              <property name="clearButtonEnabled">
               <bool>false</bool>
+             </property>
+             <property name="accessibleName">
+              <string>password</string>
              </property>
             </widget>
            </item>
@@ -526,6 +552,7 @@
              </property>
             </spacer>
            </item>
+
            <item>
             <layout class="QHBoxLayout" name="birthdateRow">
              <property name="spacing">
@@ -565,6 +592,9 @@
                <property name="displayFormat">
                 <string>dd/MM/yyyy</string>
                </property>
+               <property name="accessibleName">
+                <string>birthdate</string>
+               </property>
               </widget>
              </item>
              <item>
@@ -599,12 +629,35 @@
             </spacer>
            </item>
            <item>
+            <widget class="QLabel" name="registerNicknameHint">
+             <property name="text">
+              <string>Usuario</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6b7280; font-size: 12px;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QLineEdit" name="registerNicknameEdit">
              <property name="placeholderText">
               <string>Usuario (6-15 caracteres)</string>
              </property>
              <property name="clearButtonEnabled">
               <bool>true</bool>
+             </property>
+             <property name="accessibleName">
+              <string>usuario</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="registerEmailHint">
+             <property name="text">
+              <string>Correo electrónico</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6b7280; font-size: 12px;</string>
              </property>
             </widget>
            </item>
@@ -615,6 +668,19 @@
              </property>
              <property name="clearButtonEnabled">
               <bool>true</bool>
+             </property>
+             <property name="accessibleName">
+              <string>email</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="registerPasswordHint">
+             <property name="text">
+              <string>Contraseña</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6b7280; font-size: 12px;</string>
              </property>
             </widget>
            </item>
@@ -629,6 +695,19 @@
              <property name="clearButtonEnabled">
               <bool>false</bool>
              </property>
+             <property name="accessibleName">
+              <string>password</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="registerConfirmPasswordHint">
+             <property name="text">
+              <string>Confirmar contraseña</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: #6b7280; font-size: 12px;</string>
+             </property>
             </widget>
            </item>
            <item>
@@ -641,6 +720,9 @@
              </property>
              <property name="clearButtonEnabled">
               <bool>false</bool>
+             </property>
+             <property name="accessibleName">
+              <string>confirm_password</string>
              </property>
             </widget>
            </item>

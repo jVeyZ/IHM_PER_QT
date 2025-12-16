@@ -4,8 +4,10 @@
 #include <QCursor>
 #include <QGraphicsSceneHoverEvent>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsScene>
 #include <QPainter>
 #include <QPen>
+#include <QPixmap>
 
 #include <QtMath>
 #include <algorithm>
@@ -19,13 +21,32 @@ RulerItem::RulerItem(QGraphicsItem *parent)
 }
 
 QRectF RulerItem::boundingRect() const {
-    return QRectF(-length_ / 2.0, -25.0, length_, 50.0); // Increased width
+    // Much wider and taller bounding rect to match the 3× scaled ruler
+    return QRectF(-length_ / 2.0, -180.0, length_, 360.0);
 }
 
 void RulerItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     const QRectF rect = boundingRect();
+
+    // Try to draw the new ruler SVG; fall back to old styled drawing if unavailable
+    QPixmap pix(QStringLiteral(":/resources/images/ruler.svg"));
+    if (!pix.isNull()) {
+        // Draw the pixmap centered and scaled to fit the bounding rect while preserving aspect ratio
+        const QSizeF targetSize = rect.size();
+        const QPixmap scaled = pix.scaled(targetSize.toSize(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        const QPointF topLeft(rect.center().x() - scaled.width() / 2.0, rect.center().y() - scaled.height() / 2.0);
+        const QRectF drawnRect(topLeft, QSizeF(scaled.width(), scaled.height()));
+        // store drawn rect in local coordinates so mouse/hover checks use visible area (avoids invisible SVG margins)
+        drawnRectLocal_ = drawnRect;
+        painter->drawPixmap(drawnRect, scaled, QRectF(scaled.rect()));
+        return;
+    }
+    // No pixmap: clear drawn rect so we use boundingRect for interactions
+    drawnRectLocal_ = QRectF();
+
+    // Fallback: draw a simple ruler look
     painter->setBrush(QColor(215, 236, 255, 200));
     painter->setPen(QPen(QColor(45, 109, 163), 2.0));
     painter->drawRoundedRect(rect, 6.0, 6.0);
@@ -42,7 +63,8 @@ void RulerItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
 
 void RulerItem::setLength(double length) {
     prepareGeometryChange();
-    length_ = std::max(length, 40.0);
+    // Enforce a higher minimum so the ruler stays large (1.5× previous)
+    length_ = std::max(length, 540.0);
 }
 
 double RulerItem::length() const {
@@ -50,7 +72,8 @@ double RulerItem::length() const {
 }
 
 void RulerItem::resetState() {
-    setLength(260.0);
+    // Start the ruler at the new default (1.5× the previous size)
+    setLength(2340.0);
     setRotation(0.0);
     setPos(QPointF(0.0, 0.0));
 }
@@ -61,16 +84,25 @@ void RulerItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
 
-    const QRectF bounds = boundingRect();
+    // Clear any stale rotating/resizing state in case a previous interaction
+    // ended without delivering a proper release event.
+    if (rotating_ || resizing_) {
+        rotating_ = false;
+        resizing_ = false;
+        setCursor(Qt::OpenHandCursor);
+        if (scene() && scene()->mouseGrabberItem() == this) {
+            ungrabMouse();
+        }
+    }
+
+    const QRectF sourceRect = (!drawnRectLocal_.isNull() ? drawnRectLocal_ : boundingRect());
     const qreal edgeThreshold = 14.0;
     const QPointF localPos = event->pos();
-    const bool nearLeft = std::abs(localPos.x() - bounds.left()) < edgeThreshold;
-    const bool nearRight = std::abs(localPos.x() - bounds.right()) < edgeThreshold;
-    const bool nearTop = localPos.y() < bounds.top() + 10.0;
-    const bool nearBottom = localPos.y() > bounds.bottom() - 10.0;
-    const double edgeRegion = length_ * 0.2;
-    const bool nearLeftEdge = std::abs(localPos.x() - bounds.left()) < edgeRegion;
-    const bool nearRightEdge = std::abs(localPos.x() - bounds.right()) < edgeRegion;
+    const bool nearTop = localPos.y() < sourceRect.top() + 10.0;
+    const bool nearBottom = localPos.y() > sourceRect.bottom() - 10.0;
+    const double edgeRegion = sourceRect.width() * 0.2;
+    const bool nearLeftEdge = std::abs(localPos.x() - sourceRect.left()) < edgeRegion;
+    const bool nearRightEdge = std::abs(localPos.x() - sourceRect.right()) < edgeRegion;
 
     startScenePos_ = event->scenePos();
     startRotation_ = rotation();
@@ -79,51 +111,33 @@ void RulerItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     startAngle_ = std::atan2(rotationStartVector_.y(), rotationStartVector_.x());
     lastPointerScenePos_ = event->scenePos();
 
-
+    // Only allow rotation (by dragging near top/bottom + near one edge) or move. Resizing is disabled.
     if ((nearTop || nearBottom) && (nearLeftEdge || nearRightEdge)) {
         rotating_ = true;
         resizeEdge_ = ResizeEdge::None;
         setCursor(Qt::SizeAllCursor);
-        const double pivotX = nearLeftEdge ? bounds.right() : bounds.left();
+        if (scene() && scene()->mouseGrabberItem() == nullptr) {
+            grabMouse();
+        }
+        const double pivotX = nearLeftEdge ? sourceRect.right() : sourceRect.left();
         rotationPivotLocal_ = QPointF(pivotX, 0.0);
         rotationPivotScene_ = mapToScene(rotationPivotLocal_);
         event->accept();
         return;
     }
-    if (nearLeft || nearRight) {
-        resizing_ = true;
-        resizeEdge_ = nearLeft ? ResizeEdge::Left : ResizeEdge::Right;
-        const qreal anchorLocalX = (resizeEdge_ == ResizeEdge::Left) ? bounds.right() : bounds.left();
-        anchorScenePos_ = mapToScene(QPointF(anchorLocalX, 0));
-        setCursor(Qt::SizeHorCursor);
-        event->accept();
-        return;
-    }
 
+    // Start manual move handling (instead of relying on QGraphicsObject::mousePressEvent)
     resizeEdge_ = ResizeEdge::None;
-    QGraphicsObject::mousePressEvent(event);
+    moving_ = true;
+    lastPointerScenePos_ = event->scenePos();
+    setCursor(Qt::ClosedHandCursor);
+    event->accept();
 }
 
 void RulerItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    // Resizing disabled: skip resize handling and defer to default movement/rotation behavior
     if (resizing_) {
-        const QPointF handleDirScene = mapToScene(QPointF(resizeEdge_ == ResizeEdge::Right ? 1.0 : -1.0, 0.0)) -
-                                        mapToScene(QPointF(0.0, 0.0));
-        const double handleNorm = std::hypot(handleDirScene.x(), handleDirScene.y());
-        QPointF axis(1.0, 0.0);
-        if (handleNorm > 0.0) {
-            axis = handleDirScene / handleNorm;
-        }
-        const QPointF movement = event->scenePos() - lastPointerScenePos_;
-        const double projection = QPointF::dotProduct(movement, axis);
-        setLength(length_ + projection);
-        const QRectF bounds = boundingRect();
-        const qreal anchorLocalX = (resizeEdge_ == ResizeEdge::Left) ? bounds.right() : bounds.left();
-        const QPointF currentAnchorScene = mapToScene(QPointF(anchorLocalX, 0));
-        const QPointF shift = anchorScenePos_ - currentAnchorScene;
-        setPos(pos() + shift);
-        lastPointerScenePos_ = event->scenePos();
-        event->accept();
-        return;
+        resizing_ = false;
     }
     if (rotating_) {
         const QPointF currentVector = event->scenePos() - rotationCenterScene_;
@@ -139,6 +153,15 @@ void RulerItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
 
+    if (moving_) {
+        const QPointF delta = event->scenePos() - lastPointerScenePos_;
+        setPos(pos() + delta);
+        lastPointerScenePos_ = event->scenePos();
+        event->accept();
+        return;
+    }
+
+    // Fallback: default behavior
     QGraphicsObject::mouseMoveEvent(event);
 }
 
@@ -146,6 +169,16 @@ void RulerItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (resizing_ || rotating_) {
         resizing_ = false;
         rotating_ = false;
+        setCursor(Qt::OpenHandCursor);
+        if (scene() && scene()->mouseGrabberItem() == this) {
+            ungrabMouse();
+        }
+        event->accept();
+        return;
+    }
+
+    if (moving_) {
+        moving_ = false;
         setCursor(Qt::OpenHandCursor);
         event->accept();
         return;
@@ -162,9 +195,11 @@ void RulerItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
         setCursor(Qt::SizeAllCursor);
         return;
     }
-    if (std::abs(localPos.x() - bounds.left()) < edgeThreshold ||
-        std::abs(localPos.x() - bounds.right()) < edgeThreshold) {
-        setCursor(Qt::SizeHorCursor);
+    // Do not show horizontal resize cursor; resizing is disabled
+    // Use drawn rect (if available) for hover checks so cursor reflects visible area
+    const QRectF sourceRect = (!drawnRectLocal_.isNull() ? drawnRectLocal_ : bounds);
+    if (localPos.y() < sourceRect.top() + 10.0 || localPos.y() > sourceRect.bottom() - 10.0) {
+        setCursor(Qt::SizeAllCursor);
         return;
     }
     setCursor(Qt::OpenHandCursor);
@@ -172,4 +207,15 @@ void RulerItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
 
 void RulerItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *) {
     setCursor(Qt::OpenHandCursor);
+}
+
+void RulerItem::cancelInteraction() {
+    resizing_ = false;
+    if (rotating_) {
+        rotating_ = false;
+        setCursor(Qt::OpenHandCursor);
+        if (scene() && scene()->mouseGrabberItem() == this) {
+            ungrabMouse();
+        }
+    }
 }

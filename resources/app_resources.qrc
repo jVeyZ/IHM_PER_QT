@@ -5,6 +5,7 @@
         <file alias="resources/images/icon_hand.svg">images/icon_hand.svg</file>
         <file alias="resources/images/icon_point.svg">images/icon_point.svg</file>
         <file alias="resources/images/icon_line.svg">images/icon_line.svg</file>
+        <file alias="resources/images/icon_pencil.svg">images/icon_pencil.svg</file>
         <file alias="resources/images/icon_arc.svg">images/icon_arc.svg</file>
         <file alias="resources/images/icon_text.svg">images/icon_text.svg</file>
         <file alias="resources/images/icon_fullscreen.svg">images/icon_fullscreen.svg</file>
@@ -15,6 +16,7 @@
         <file alias="resources/images/icon_protractor.svg">images/icon_protractor.svg</file>
         <file alias="resources/images/transportador.svg">images/transportador.svg</file>
         <file alias="resources/images/icon_ruler.svg">images/icon_ruler.svg</file>
+        <file alias="resources/images/ruler.svg">images/ruler.svg</file>
         <file alias="resources/images/icon_extremes.svg">images/icon_extremes.svg</file>
         <file alias="resources/images/icon_zoom_in.svg">images/icon_zoom_in.svg</file>
         <file alias="resources/images/icon_zoom_out.svg">images/icon_zoom_out.svg</file>

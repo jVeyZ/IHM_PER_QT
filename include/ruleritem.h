@@ -20,6 +20,8 @@ public:
     void setLength(double length);
     double length() const;
     void resetState();
+    // Cancel any active interaction (rotation/resizing)
+    void cancelInteraction();
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -29,8 +31,10 @@ protected:
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
 
  private:
-    double length_ = 260.0;
+    double length_ = 2340.0;
     qreal startRotation_ = 0.0;
+    // Last drawn pixmap rect in local coordinates (used to avoid invisible SVG margins)
+    QRectF drawnRectLocal_ = QRectF();
     double startAngle_ = 0.0;
     QPointF startScenePos_;
     QPointF rotationCenterScene_;
@@ -38,6 +42,7 @@ protected:
     QPointF lastPointerScenePos_;
     bool rotating_ = false;
     bool resizing_ = false;
+    bool moving_ = false;
     QPointF anchorScenePos_;
     QPointF rotationPivotScene_;
     QPointF rotationPivotLocal_;

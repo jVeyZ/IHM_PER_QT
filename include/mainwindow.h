@@ -63,6 +63,7 @@ private slots:
     void logout();
     void toggleProtractor(bool checked);
     void toggleRuler(bool checked);
+    void toggleCompass(bool checked);
     void toggleExtremes();
     void clearChart();
     void zoomInOnChart();
@@ -178,6 +179,7 @@ private:
     QAction *eraserAction_ = nullptr;
     QAction *protractorAction_ = nullptr;
     QAction *rulerAction_ = nullptr;
+    QAction *compassAction_ = nullptr;
     QAction *clearAction_ = nullptr;
     QAction *zoomInAction_ = nullptr;
     QAction *zoomOutAction_ = nullptr;

@@ -142,12 +142,22 @@ void ProfileDialog::setupUi() {
 
     // Add avatar centered without a label to match register dialog
     form->addRow(avatarContainer);
+
     form->addRow(tr("Fecha de nacimiento"), birthdateEdit_);
+
     form->addRow(tr("Usuario"), nicknameEdit_);
+
     form->addRow(tr("Correo electrónico"), emailEdit_);
+
     form->addRow(tr("Nueva contraseña"), passwordEdit_);
+
     form->addRow(tr("Confirmar contraseña"), confirmPasswordEdit_);
 
+    // Accessible names for automation / accessibility
+    emailEdit_->setAccessibleName(tr("email"));
+    passwordEdit_->setAccessibleName(tr("password"));
+    confirmPasswordEdit_->setAccessibleName(tr("confirm_password"));
+    birthdateEdit_->setAccessibleName(tr("birthdate"));
     layout->addLayout(form);
 
     feedbackLabel_ = new QLabel();

@@ -47,6 +47,37 @@ ChartScene::ChartScene(QObject *parent)
     ruler_->setZValue(40);
     addItem(ruler_);
 
+    // Compass for arc tool
+    compass_ = new CompassItem();
+    compass_->setVisible(false);
+    compass_->setZValue(45);
+    addItem(compass_);
+    connect(compass_, &CompassItem::radiusChanged, this, [this](double r) {
+        // Update helper circle when user adjusts the compass radius while in CenterSet
+        if (arcStage_ == ArcStage::CenterSet) {
+            if (arcHelperCircle_) {
+                removeItem(arcHelperCircle_);
+                delete arcHelperCircle_;
+                arcHelperCircle_ = nullptr;
+            }
+            arcRadius_ = r;
+            arcHelperCircle_ = addEllipse(QRectF(arcCenter_.x() - arcRadius_, arcCenter_.y() - arcRadius_,
+                                                 arcRadius_ * 2.0, arcRadius_ * 2.0),
+                                          QPen(QColor(31, 119, 180, 120), 1, Qt::DashLine), Qt::NoBrush);
+            arcHelperCircle_->setZValue(18.0);
+        }
+    });
+
+    connect(compass_, &CompassItem::positionChanged, this, [this](const QPointF &p) {
+        // When the compass pivot moves, keep arc center in sync while in CenterSet stage
+        if (arcStage_ == ArcStage::CenterSet) {
+            arcCenter_ = p;
+            if (arcHelperCircle_) {
+                arcHelperCircle_->setRect(QRectF(arcCenter_.x() - arcRadius_, arcCenter_.y() - arcRadius_, arcRadius_ * 2.0, arcRadius_ * 2.0));
+            }
+        }
+    });
+
     connect(this, &QGraphicsScene::selectionChanged, this, [this]() {
         if (currentTool_ == Tool::Select) {
             for (auto *item : selectedItems()) {
@@ -148,6 +179,21 @@ void ChartScene::setRulerVisible(bool visible, const QPointF &viewportCenter) {
     }
 }
 
+void ChartScene::setCompassVisible(bool visible, const QPointF &viewportCenter) {
+    if (compass_) {
+        compass_->setVisible(visible);
+        if (visible) {
+            if (!viewportCenter.isNull()) {
+                compass_->setPos(viewportCenter);
+            } else {
+                compass_->setPos(sceneRect().center());
+            }
+        }
+        // track user preference
+        compassEnabled_ = visible;
+    }
+}
+
 bool ChartScene::isRulerAt(const QPointF &scenePos) const {
     if (!ruler_ || !ruler_->isVisible()) {
         return false;
@@ -164,6 +210,70 @@ bool ChartScene::isProtractorAt(const QPointF &scenePos) const {
 
     const QPointF localPos = protractor_->mapFromScene(scenePos);
     return protractor_->boundingRect().contains(localPos);
+}
+
+bool ChartScene::isCompassAt(const QPointF &scenePos) const {
+    if (!compass_ || !compass_->isVisible()) {
+        return false;
+    }
+    // Delegate to compass item to check pivot hit specifically
+    return compass_->isPointOnPivot(scenePos) || compass_->isPointOnHandle(scenePos);
+}
+
+bool ChartScene::beginCompassPivotDragIfTarget(const QPointF &scenePos) {
+    if (!compass_ || !compass_->isVisible()) {
+        return false;
+    }
+    if (!compass_->isPointOnPivot(scenePos)) {
+        return false;
+    }
+    // If nothing grabbed the mouse, start the drag programmatically
+    if (!mouseGrabberItem()) {
+        compass_->beginPivotDrag();
+        return true;
+    }
+    return false;
+}
+
+bool ChartScene::beginCompassHandleDragIfTarget(const QPointF &scenePos) {
+    if (!compass_ || !compass_->isVisible()) {
+        return false;
+    }
+    if (!compass_->isPointOnHandle(scenePos)) {
+        return false;
+    }
+    if (!mouseGrabberItem()) {
+        compass_->beginHandleDrag();
+        return true;
+    }
+    return false;
+}
+
+bool ChartScene::beginCompassRotationIfTarget(const QPointF &scenePos) {
+    if (!compass_ || !compass_->isVisible()) {
+        return false;
+    }
+    // target must be on the compass body but not the pivot/handle
+    if (compass_->isPointOnPivot(scenePos) || compass_->isPointOnHandle(scenePos)) {
+        return false;
+    }
+    if (!mouseGrabberItem()) {
+        compass_->beginRotation(scenePos);
+        return true;
+    }
+    return false;
+}
+
+void ChartScene::cancelCompassDrag() {
+    if (compass_) {
+        compass_->cancelDrag();
+    }
+}
+
+void ChartScene::cancelRulerInteraction() {
+    if (ruler_) {
+        ruler_->cancelInteraction();
+    }
 }
 
 void ChartScene::placeText(const QPointF &scenePos, const QString &text) {
@@ -253,6 +363,42 @@ void ChartScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             }
             continue;
         }
+
+        const bool isCompass = (item == compass_ || item->parentItem() == compass_);
+        if (isCompass) {
+            // If the user has the Line tool selected and clicks the compass handle,
+            // start an arc drafting action *using the compass radius* (don't modify radius).
+            if (currentTool_ == Tool::Line && compass_ && compass_->isVisible() && compassEnabled_) {
+                if (compass_->isPointOnHandle(pos)) {
+                    // Start an arc using the compass radius
+                    arcCenter_ = compass_->pos();
+                    arcRadius_ = compass_->radius();
+                    // Use the compass handle position as the canonical start angle so
+                    // the user's compass rotation remains the source of truth.
+                    const QPointF handleScene = compass_->mapToScene(QPointF(compass_->radius(), 0.0));
+                    arcStartAngle_ = toSceneAngle(arcCenter_, handleScene);
+                    // initialize accumulation for continuous rotation
+                    arcAccumulatedSpan_ = 0.0;
+                    arcLastAngle_ = arcStartAngle_;
+                    if (arcPreview_) {
+                        removeItem(arcPreview_);
+                        delete arcPreview_;
+                        arcPreview_ = nullptr;
+                    }
+                    arcPreview_ = addPath(QPainterPath(), QPen(currentColor_, lineWidth_ + 1, Qt::SolidLine, Qt::RoundCap));
+                    arcPreview_->setZValue(26.0);
+                    if (compass_) {
+                        // compass rotation persists — do not alter or store it here
+                    }
+                    arcStage_ = ArcStage::StartSet;
+                    emit statusMessage(tr("Arrastra para dibujar el arco alrededor del compás."));
+                    return;
+                }
+            }
+            // Otherwise allow compass to be interacted with regardless of selected tool
+            QGraphicsScene::mousePressEvent(event);
+            return;
+        }
     }
 
     switch (currentTool_) {
@@ -271,21 +417,29 @@ void ChartScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         break;
     }
     case Tool::Line: {
+        // Freehand drawing: start a QPainterPath and show a preview while moving
         lineDrafting_ = true;
         startPoint_ = pos;
-        if (linePreview_) {
-            removeItem(linePreview_);
-            delete linePreview_;
+        if (linePreviewPath_) {
+            removeItem(linePreviewPath_);
+            delete linePreviewPath_;
+            linePreviewPath_ = nullptr;
         }
-        linePreview_ = addLine(QLineF(pos, pos), QPen(currentColor_, lineWidth_, Qt::SolidLine, Qt::RoundCap));
-        linePreview_->setZValue(25.0);
+        currentLinePath_ = QPainterPath();
+        currentLinePath_.moveTo(pos);
+        linePreviewPath_ = addPath(currentLinePath_, QPen(currentColor_, lineWidth_, Qt::SolidLine, Qt::RoundCap));
+        linePreviewPath_->setZValue(25.0);
         break;
     }
     case Tool::Arc: {
         if (arcStage_ == ArcStage::None) {
+            // Place the compass pivot at the clicked center
             arcCenter_ = pos;
             arcStage_ = ArcStage::CenterSet;
-            emit statusMessage(tr("Seleccione el inicio del arco."));
+            compass_->setPos(arcCenter_);
+            compass_->setVisible(true);
+            compass_->setRadius(std::max(120.0, arcRadius_ > 0.0 ? arcRadius_ : 200.0));
+            emit statusMessage(tr("Coloca la otra pata para ajustar el radio y haz clic para seleccionar el inicio del arco."));
         } else if (arcStage_ == ArcStage::CenterSet) {
             const double radius = distance(arcCenter_, pos);
             if (radius < 4.0) {
@@ -293,11 +447,22 @@ void ChartScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
                 return;
             }
             arcRadius_ = radius;
-            arcStartAngle_ = toSceneAngle(arcCenter_, pos);
+            if (compass_ && compass_->isVisible() && compassEnabled_) {
+                const QPointF handleScene = compass_->mapToScene(QPointF(compass_->radius(), 0.0));
+                arcStartAngle_ = toSceneAngle(arcCenter_, handleScene);
+            } else {
+                arcStartAngle_ = toSceneAngle(arcCenter_, pos);
+            }
+
+            // initialize accumulation so subsequent mouse moves create a continuous
+            // signed span following the user's drag direction and allow >180° arcs
+            arcAccumulatedSpan_ = 0.0;
+            arcLastAngle_ = arcStartAngle_;
 
             if (arcHelperCircle_) {
                 removeItem(arcHelperCircle_);
                 delete arcHelperCircle_;
+                arcHelperCircle_ = nullptr;
             }
             arcHelperCircle_ = addEllipse(QRectF(arcCenter_.x() - arcRadius_, arcCenter_.y() - arcRadius_,
                                                  arcRadius_ * 2.0, arcRadius_ * 2.0),
@@ -310,6 +475,7 @@ void ChartScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             }
             arcPreview_ = addPath(QPainterPath(), QPen(currentColor_, lineWidth_ + 1, Qt::SolidLine, Qt::RoundCap));
             arcPreview_->setZValue(26.0);
+            // compass rotation remains persistent; don't store/restore it
             arcStage_ = ArcStage::StartSet;
             emit statusMessage(tr("Arrastre para definir el arco y suelte para finalizar."));
         }
@@ -366,26 +532,41 @@ void ChartScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 void ChartScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     const QPointF pos = event->scenePos();
 
-    if (lineDrafting_ && linePreview_) {
-        linePreview_->setLine(QLineF(startPoint_, pos));
+    // No special circle drafting here; arc previewing is handled by ArcStage::StartSet block above
+
+    if (lineDrafting_ && linePreviewPath_) {
+        currentLinePath_.lineTo(pos);
+        linePreviewPath_->setPath(currentLinePath_);
         event->accept();
         return;
     }
 
     if (arcStage_ == ArcStage::StartSet && arcPreview_) {
         const double angle = toSceneAngle(arcCenter_, pos);
-        double span = angle - arcStartAngle_;
-        if (span <= 0.0) {
-            span += 360.0;
-        }
+        // Compute signed delta since last move, normalize to (-180,180]
+        double delta = angle - arcLastAngle_;
+        delta = std::fmod(delta + 540.0, 360.0) - 180.0;
+        arcAccumulatedSpan_ += delta;
+        arcLastAngle_ = angle;
+        const double span = arcAccumulatedSpan_;
         QPainterPath path;
         const QRectF rect(arcCenter_.x() - arcRadius_, arcCenter_.y() - arcRadius_, arcRadius_ * 2.0, arcRadius_ * 2.0);
         path.arcMoveTo(rect, arcStartAngle_);
         path.arcTo(rect, arcStartAngle_, span);
         arcPreview_->setPath(path);
+        // Also update compass movable leg position while previewing; use current angle for visual alignment
+        if (compass_ && compass_->isVisible()) {
+            const double radians = qDegreesToRadians(angle);
+            const QPointF handle(arcRadius_ * std::cos(radians), arcRadius_ * std::sin(radians) * -1.0);
+            compass_->setPos(arcCenter_);
+            compass_->setRotation(-angle);
+            compass_->setRadius(arcRadius_);
+        }
         event->accept();
         return;
     }
+
+    // No special circle drafting here; release handling for arc drafting is handled later
 
     if (distanceDrafting_ && distancePreview_) {
         distancePreview_->updateGeometry(startPoint_, pos, currentColor_, lineWidth_ + 1, pixelsPerNauticalMile_);
@@ -397,33 +578,43 @@ void ChartScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void ChartScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    // Ensure any active compass drag is canceled even if the release wasn't
+    // delivered directly to the compass item (e.g., user released outside view).
+    cancelCompassDrag();
+    // Also ensure any active ruler interaction is canceled
+    cancelRulerInteraction();
+
     const QPointF pos = event->scenePos();
 
-    if (lineDrafting_ && linePreview_) {
+    if (lineDrafting_ && linePreviewPath_) {
         lineDrafting_ = false;
-        const QLineF line(startPoint_, pos);
-        if (line.length() > 3.0) {
-            auto *item = addLine(line, QPen(currentColor_, lineWidth_, Qt::SolidLine, Qt::RoundCap));
+        // Use bounding box as a simple threshold for whether the stroke is meaningful
+        const QRectF bounds = currentLinePath_.controlPointRect();
+        const double diag = std::hypot(bounds.width(), bounds.height());
+        if (diag > 3.0) {
+            auto *item = addPath(currentLinePath_, QPen(currentColor_, lineWidth_, Qt::SolidLine, Qt::RoundCap));
             item->setFlag(QGraphicsItem::ItemIsSelectable, true);
             item->setFlag(QGraphicsItem::ItemIsMovable, true);
             item->setData(0, LineItem);
             item->setZValue(22.0);
             updateMarkCount();
         }
-        removeItem(linePreview_);
-        delete linePreview_;
-        linePreview_ = nullptr;
+        removeItem(linePreviewPath_);
+        delete linePreviewPath_;
+        linePreviewPath_ = nullptr;
+        currentLinePath_ = QPainterPath();
         event->accept();
         return;
     }
 
     if (arcStage_ == ArcStage::StartSet && arcPreview_) {
         const double angle = toSceneAngle(arcCenter_, pos);
-        double span = angle - arcStartAngle_;
-        if (span <= 0.0) {
-            span += 360.0;
-        }
-        if (span > 0.5) {
+        double delta = angle - arcLastAngle_;
+        delta = std::fmod(delta + 540.0, 360.0) - 180.0;
+        arcAccumulatedSpan_ += delta;
+        arcLastAngle_ = angle;
+        const double span = arcAccumulatedSpan_;
+        if (std::abs(span) > 0.5) {
             auto *item = addPath(arcPreview_->path(), QPen(currentColor_, lineWidth_, Qt::SolidLine, Qt::RoundCap));
             item->setFlag(QGraphicsItem::ItemIsSelectable, true);
             item->setFlag(QGraphicsItem::ItemIsMovable, true);
@@ -439,43 +630,19 @@ void ChartScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
             delete arcHelperCircle_;
             arcHelperCircle_ = nullptr;
         }
+        // Hide compass after finishing arc only if user hasn't enabled it via the toggle
+        if (compass_ && !compassEnabled_) {
+            compass_->setVisible(false);
+            compass_->setRotation(0.0);
+        }
+        // Do not reset compass rotation; keep user's orientation as-is
+        // reset accumulation state
+        arcAccumulatedSpan_ = 0.0;
+        arcLastAngle_ = 0.0;
         arcStage_ = ArcStage::None;
         event->accept();
         return;
     }
-
-    if (distanceDrafting_ && distancePreview_) {
-        distanceDrafting_ = false;
-        distancePreview_->updateGeometry(startPoint_, pos, currentColor_, lineWidth_ + 1, pixelsPerNauticalMile_);
-        emit distanceMeasured(distancePreview_->pixels(), distancePreview_->nauticalMiles());
-        updateMarkCount();
-        distancePreview_ = nullptr;
-        event->accept();
-        return;
-    }
-
-    QGraphicsScene::mouseReleaseEvent(event);
-}
-
-void ChartScene::keyPressEvent(QKeyEvent *event) {
-    if (event->key() == Qt::Key_Space) {
-        if (ruler_->rotation() == 0.0) {
-            ruler_->setRotation(90.0); // Snap to vertical
-        } else {
-            ruler_->setRotation(0.0); // Snap to horizontal
-        }
-        event->accept();
-        return;
-    }
-    if (event->key() == Qt::Key_Escape) {
-        cancelLineDraft();
-        cancelArcDraft();
-        cancelDistanceDraft();
-        awaitingText_ = false;
-        event->accept();
-        return;
-    }
-    QGraphicsScene::keyPressEvent(event);
 }
 
 void ChartScene::applyColorToItem(QGraphicsItem *item, const QColor &color) {
@@ -570,10 +737,10 @@ bool ChartScene::isProtectedItem(QGraphicsItem *item) const {
     if (!item) {
         return true;
     }
-    if (item == background_ || item == protractor_ || item == ruler_) {
+    if (item == background_ || item == protractor_ || item == ruler_ || item == compass_) {
         return true;
     }
-    if (item->parentItem() == protractor_ || item->parentItem() == ruler_) {
+    if (item->parentItem() == protractor_ || item->parentItem() == ruler_ || item->parentItem() == compass_) {
         return true;
     }
     return false;
@@ -602,15 +769,17 @@ void ChartScene::cancelArcDraft() {
         delete arcHelperCircle_;
         arcHelperCircle_ = nullptr;
     }
+    // Do not alter compass rotation on cancel; leave its orientation as the user set it.
 }
 
 void ChartScene::cancelLineDraft() {
     lineDrafting_ = false;
-    if (linePreview_) {
-        removeItem(linePreview_);
-        delete linePreview_;
-        linePreview_ = nullptr;
+    if (linePreviewPath_) {
+        removeItem(linePreviewPath_);
+        delete linePreviewPath_;
+        linePreviewPath_ = nullptr;
     }
+    currentLinePath_ = QPainterPath();
 }
 
 void ChartScene::cancelDistanceDraft() {
@@ -654,4 +823,17 @@ void ChartScene::placeCrosshair(const QPointF &pos) {
         crosshairVertical_->setAcceptedMouseButtons(Qt::NoButton);
     }
     updateMarkCount();
+}
+
+void ChartScene::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Escape) {
+        cancelLineDraft();
+        cancelArcDraft();
+        cancelDistanceDraft();
+        // No circle drafting state to handle here anymore.
+        awaitingText_ = false;
+        event->accept();
+        return;
+    }
+    QGraphicsScene::keyPressEvent(event);
 }

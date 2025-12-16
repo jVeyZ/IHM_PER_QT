@@ -11,6 +11,7 @@
 #include "distanceitem.h"
 #include "protractoritem.h"
 #include "ruleritem.h"
+#include "compassitem.h"
 
 class ChartScene : public QGraphicsScene {
     Q_OBJECT
@@ -44,12 +45,22 @@ public:
 
     void setProtractorVisible(bool visible, const QPointF &viewportCenter = QPointF());
     void setRulerVisible(bool visible, const QPointF &viewportCenter = QPointF());
+    void setCompassVisible(bool visible, const QPointF &viewportCenter = QPointF());
+    void cancelCompassDrag();
+    void cancelRulerInteraction();
+
+    // Try to start a pivot drag or handle drag on the compass if the scene
+    // position targets it. Returns true if a drag was started.
+    bool beginCompassPivotDragIfTarget(const QPointF &scenePos);
+    bool beginCompassHandleDragIfTarget(const QPointF &scenePos);
+    bool beginCompassRotationIfTarget(const QPointF &scenePos);
 
     void placeText(const QPointF &scenePos, const QString &text);
     void toggleExtremesForSelection();
     void clearMarks();
     bool isProtractorAt(const QPointF &scenePos) const;
     bool isRulerAt(const QPointF &scenePos) const;
+    bool isCompassAt(const QPointF &scenePos) const;
     void clearCrosshair();
 
 signals:
@@ -96,12 +107,15 @@ private:
     QGraphicsPixmapItem *background_ = nullptr;
     QPointer<ProtractorItem> protractor_;
     QPointer<RulerItem> ruler_;
+    QPointer<CompassItem> compass_;
+    bool compassEnabled_ = false;
 
     QPointF startPoint_;
 
     // Line drafting
     bool lineDrafting_ = false;
-    QGraphicsLineItem *linePreview_ = nullptr;
+    QGraphicsPathItem *linePreviewPath_ = nullptr;
+    QPainterPath currentLinePath_;
 
     // Arc drafting
     enum class ArcStage { None, CenterSet, StartSet };
@@ -111,6 +125,12 @@ private:
     double arcRadius_ = 0.0;
     QGraphicsEllipseItem *arcHelperCircle_ = nullptr;
     QGraphicsPathItem *arcPreview_ = nullptr;
+    // For continuous arc drawing we accumulate signed rotation deltas so
+    // the user can draw arcs larger than 180° (and full circles) by rotating.
+    double arcAccumulatedSpan_ = 0.0;
+    double arcLastAngle_ = 0.0;
+    // (no longer storing/restoring compass rotation; the compass rotation persists)
+    // (legacy circle drafting was removed; drawing now uses Arc stages when starting from compass handle)
 
     // Distance drafting
     bool distanceDrafting_ = false;
