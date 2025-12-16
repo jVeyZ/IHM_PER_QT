@@ -2,6 +2,7 @@
 
 #include "usermanager.h"
 
+#include <QAction>
 #include <QDate>
 #include <QDateEdit>
 #include <QFileDialog>
@@ -103,22 +104,49 @@ void ProfileDialog::setupUi() {
     auto *avatarButton = new QPushButton(tr("Cambiar avatar"));
     connect(avatarButton, &QPushButton::clicked, this, &ProfileDialog::selectAvatar);
 
-    form->addRow(tr("Usuario"), nicknameEdit_);
-    form->addRow(tr("Correo electrónico"), emailEdit_);
-    form->addRow(tr("Nueva contraseña"), passwordEdit_);
-    form->addRow(tr("Confirmar contraseña"), confirmPasswordEdit_);
-    form->addRow(tr("Fecha de nacimiento"), birthdateEdit_);
+    // Password visibility toggles (match RegisterDialog)
+    togglePasswordAction_ = passwordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    togglePasswordAction_->setCheckable(true);
+    connect(togglePasswordAction_, &QAction::toggled, this, [this](bool checked) {
+        passwordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        togglePasswordAction_->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
 
+    toggleConfirmPasswordAction_ = confirmPasswordEdit_->addAction(
+        QIcon(QStringLiteral(":/resources/images/icon_eye_closed.svg")),
+        QLineEdit::TrailingPosition);
+    toggleConfirmPasswordAction_->setCheckable(true);
+    connect(toggleConfirmPasswordAction_, &QAction::toggled, this, [this](bool checked) {
+        confirmPasswordEdit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        toggleConfirmPasswordAction_->setIcon(QIcon(checked
+            ? QStringLiteral(":/resources/images/icon_eye_open.svg")
+            : QStringLiteral(":/resources/images/icon_eye_closed.svg")));
+    });
+
+    // Reorder form to match register: Avatar, Fecha, Usuario, Correo, Nueva contraseña, Confirmar contraseña
     auto *avatarLayout = new QHBoxLayout();
     avatarLayout->setContentsMargins(0, 0, 0, 0);
     avatarLayout->setSpacing(8);
+    // center avatar & button
+    avatarLayout->addStretch(1);
     avatarLayout->addWidget(avatarPreview_);
     avatarLayout->addWidget(avatarButton);
     avatarLayout->addStretch(1);
 
     auto *avatarContainer = new QWidget();
     avatarContainer->setLayout(avatarLayout);
-    form->addRow(tr("Avatar"), avatarContainer);
+
+    // Add avatar centered without a label to match register dialog
+    form->addRow(avatarContainer);
+    form->addRow(tr("Fecha de nacimiento"), birthdateEdit_);
+    form->addRow(tr("Usuario"), nicknameEdit_);
+    form->addRow(tr("Correo electrónico"), emailEdit_);
+    form->addRow(tr("Nueva contraseña"), passwordEdit_);
+    form->addRow(tr("Confirmar contraseña"), confirmPasswordEdit_);
 
     layout->addLayout(form);
 
@@ -127,6 +155,9 @@ void ProfileDialog::setupUi() {
     feedbackLabel_->setWordWrap(true);
     feedbackLabel_->setVisible(false);
     layout->addWidget(feedbackLabel_);
+
+    // add extra spacing before the save button so fields and button do not feel cramped
+    layout->addSpacing(12);
 
     saveButton_ = new QPushButton(tr("Guardar cambios"));
     layout->addWidget(saveButton_);
