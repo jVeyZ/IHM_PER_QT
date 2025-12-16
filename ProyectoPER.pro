@@ -18,6 +18,8 @@ SOURCES += \
     src/protractoritem.cpp \
     src/ruleritem.cpp \
     src/distanceitem.cpp \
+    src/compassitem.cpp \
+    src/logindialog.cpp \
     src/navigation.cpp \
     src/navigationdao.cpp
 
@@ -34,7 +36,11 @@ HEADERS += \
     include/distanceitem.h \
     include/usermanager.h \
     include/navigation.h \
-    include/navigationdao.h
+    include/navigationdao.h \
+    include/compassitem.h \
+    include/logindialog.h \
+    include/navdaoexception.h \
+    include/navtypes.h
 
 FORMS += \
     ui/mainwindow.ui
